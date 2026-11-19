@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-night font-body text-base leading-relaxed text-paper antialiased; }
+  h1, h2, h3 { @apply font-display leading-tight; }
+  :focus-visible { outline: 3px solid #5eead4; outline-offset: 3px; }
+}
+
+/* Shared by the contact form and the admin panel */
+@layer components {
+  .btn { @apply inline-block cursor-pointer rounded-full border border-paper/70 bg-transparent px-5 py-2.5 text-sm font-semibold text-paper no-underline transition duration-200 hover:-translate-y-0.5 hover:bg-white/10; }
+  .btn.gold { @apply border-gold bg-gold text-night hover:bg-[#ffd07f]; }
+  .aform { @apply grid gap-4; }
+  .aform label { @apply grid gap-1.5 text-sm font-semibold capitalize; }
+  .aform input, .aform textarea, .aform select { @apply w-full rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-base font-normal normal-case text-paper placeholder:text-paper/40; }
+  .aform select option { @apply text-night; }
+  .aform small { @apply font-normal normal-case text-paper/60; }
+  .aform .row { @apply flex flex-wrap items-center gap-3; }
+  .aform .err, .err { @apply text-red-300; }
+  .admin { @apply mx-auto max-w-4xl px-5 pb-20 pt-8 sm:px-8; }
+  .admin.login { @apply grid min-h-screen place-items-center; }
+  .admin.login .aform { @apply w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-xl; }
+  .abar { @apply mb-6 flex flex-wrap items-center justify-between gap-3; }
+  .abar h1 { @apply text-2xl font-bold; }
+  .abar span { @apply flex items-center gap-3; }
+  .tabs { @apply mb-7 flex flex-wrap gap-2; }
+  .tabs button { @apply rounded-full border border-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/10; }
+  .tabs .on { @apply border-gold bg-gold text-night hover:bg-gold; }
+  .alist { @apply mt-5 list-none p-0; }
+  .alist li { @apply flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-3; }
+  .alist .btn { @apply px-3.5 py-1.5; }
+  .msgs li { @apply items-start; }
+}

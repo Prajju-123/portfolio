@@ -1,4 +1,4 @@
-# Prajwal Mogaveera - Life Journey Portfolio (MERN)
+# Prajwal Mogaveera - Life Journey Portfolio (MERN + Tailwind)
 
 Public site at `/` (no login). Admin panel at `/admin` (JWT login). All content comes from MongoDB.
 
@@ -20,3 +20,6 @@ Public site at `/` (no login). Admin panel at `/admin` (JWT login). All content 
 ## Deploy
 - API: any Node host (Render, Railway). Set the .env values and CLIENT_URL to your site URL.
 - Client: `npm run build` and host `dist` (Vercel, Netlify). Set VITE_API_URL to `https://your-api/api`.
+
+## Photo
+The hero uses `client/public/profile.png` (taken from your resume). Replace that file with a sharper photo, or paste an image URL in Admin > Profile > Photo.

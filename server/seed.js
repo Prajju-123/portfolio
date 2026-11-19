@@ -15,7 +15,7 @@ await Profile.create({
   tagline: 'I turn business workflows into fast, friendly interfaces.',
   summary: 'Software Developer with 2+ years of experience building responsive, scalable web applications using the MERN stack (React.js, Node.js, MongoDB). Skilled in developing reusable UI components and integrating REST APIs to deliver efficient, user-focused enterprise solutions.',
   location: 'Yelachenahalli, Bengaluru', email: 'prajjumogaveera2001@gmail.com', phone: '9632906738',
-  linkedin: 'https://linkedin.com/in/prajwal-mogaveera-0a9128252', github: 'https://github.com/Prajju-123', photo: '',
+  linkedin: 'https://linkedin.com/in/prajwal-mogaveera-0a9128252', github: 'https://github.com/Prajju-123', photo: '/profile.png',
   softSkills: ['Communication', 'Problem Solving', 'Teamwork', 'Team Building'],
   languages: ['English', 'Hindi', 'Kannada'], hobbies: ['Cricket', 'Badminton'],
 });
