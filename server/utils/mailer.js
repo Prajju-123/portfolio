@@ -6,7 +6,8 @@ const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
-  const { MAIL_USER, MAIL_PASS, SMTP_HOST, SMTP_PORT, SMTP_SECURE } = process.env;
+  const { MAIL_USER, SMTP_HOST, SMTP_PORT, SMTP_SECURE } = process.env;
+  const MAIL_PASS = (process.env.MAIL_PASS || '').replace(/\s+/g, ''); // Google shows App Passwords in 4 groups with spaces; they are not part of the password
   if (!MAIL_USER || !MAIL_PASS) throw new Error('MAIL_USER / MAIL_PASS are not set in server/.env');
   transporter = SMTP_HOST
     ? nodemailer.createTransport({ host: SMTP_HOST, port: Number(SMTP_PORT) || 587, secure: SMTP_SECURE === 'true', auth: { user: MAIL_USER, pass: MAIL_PASS } })
@@ -31,4 +32,15 @@ export async function sendContactMail({ name, email, message }) {
     </div>`,
   });
   return info;
+}
+
+// Called once at startup so a wrong/missing App Password shows up in the terminal immediately.
+export async function checkMail() {
+  try {
+    await getTransporter().verify();
+    console.log('Mail ready: messages will be sent to', process.env.MAIL_TO || 'prajjumogaveera2001@gmail.com');
+  } catch (e) {
+    console.error('\n[MAIL NOT WORKING]', e.message);
+    if (/Invalid login|Username and Password not accepted|535/i.test(e.message)) console.error('Gmail rejected the login. Use a 16-character App Password (https://myaccount.google.com/apppasswords) in MAIL_PASS, with MAIL_USER set to the same Gmail account.\n');
+  }
 }

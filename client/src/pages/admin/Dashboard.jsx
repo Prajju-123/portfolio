@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, setToken } from '../../api.js';
+import { useToast } from '../../components/Toast.jsx';
 
 // Each entry: [fieldName, type, options]. Types: text (default), textarea, list (one per line), number, select
 const CFG = {
@@ -55,12 +56,11 @@ function Field({ f: [k, type = 'text', opts], v, set }) {
 
 function Form({ fields, value, onSave, onCancel }) {
   const [v, setV] = useState(value);
-  const [msg, setMsg] = useState('');
+  const toast = useToast();
   const set = (k, x) => setV((o) => ({ ...o, [k]: x }));
   const submit = async (e) => {
     e.preventDefault();
-    setMsg('');
-    try { await onSave(clean(v, fields)); setMsg('Saved'); } catch (x) { setMsg(x.message); }
+    try { await onSave(clean(v, fields)); toast.success('Your changes were saved.', 'Saved'); } catch (x) { toast.error(x.message, 'Could not save'); }
   };
   return (
     <form className="aform" onSubmit={submit}>
@@ -68,7 +68,6 @@ function Form({ fields, value, onSave, onCancel }) {
       <div className="row">
         <button className="btn gold">Save</button>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancel</button>}
-        <span role="status">{msg}</span>
       </div>
     </form>
   );
@@ -82,6 +81,7 @@ function Profile() {
 }
 
 function Collection({ col }) {
+  const toast = useToast();
   const { fields } = CFG[col];
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(null);
@@ -93,7 +93,10 @@ function Collection({ col }) {
     setForm(null);
     load();
   };
-  const del = async (it) => { if (confirm('Delete this item?')) { await api(`/${col}/${it._id}`, { method: 'DELETE' }); load(); } };
+  const del = async (it) => {
+    if (!confirm('Delete this item?')) return;
+    try { await api(`/${col}/${it._id}`, { method: 'DELETE' }); toast.success('The item was deleted.', 'Deleted'); load(); } catch (x) { toast.error(x.message, 'Could not delete'); }
+  };
 
   if (form) return <Form key={form._id || 'new'} fields={fields} value={form} onSave={save} onCancel={() => setForm(null)} />;
   return (
@@ -113,6 +116,7 @@ function Collection({ col }) {
 }
 
 function Messages() {
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const load = () => api('/messages').then(setItems);
   useEffect(() => { load(); }, []);
@@ -122,7 +126,7 @@ function Messages() {
       {items.map((m) => (
         <li key={m._id}>
           <div><b>{m.name}</b> ({m.email}) <small>{new Date(m.createdAt).toLocaleString()}</small><p>{m.message}</p></div>
-          <button className="btn" onClick={async () => { await api('/messages/' + m._id, { method: 'DELETE' }); load(); }}>Delete</button>
+          <button className="btn" onClick={async () => { try { await api('/messages/' + m._id, { method: 'DELETE' }); toast.success('Message deleted.', 'Deleted'); load(); } catch (x) { toast.error(x.message, 'Could not delete'); } }}>Delete</button>
         </li>
       ))}
     </ul>

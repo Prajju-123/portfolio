@@ -1,21 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, setToken } from '../../api.js';
+import { useToast } from '../../components/Toast.jsx';
 
 export default function Login() {
   const nav = useNavigate();
   const [f, setF] = useState({ email: '', password: '' });
-  const [err, setErr] = useState('');
+  const toast = useToast();
 
   const submit = async (e) => {
     e.preventDefault();
-    setErr('');
     try {
       const { token } = await api('/auth/login', { method: 'POST', body: f });
       setToken(token);
+      toast.success('Welcome back.', 'Logged in');
       nav('/admin');
     } catch (x) {
-      setErr(x.message);
+      toast.error(x.message, 'Login failed');
     }
   };
 
@@ -26,7 +27,6 @@ export default function Login() {
         <label>Email<input type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
         <label>Password<input type="password" required value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></label>
         <button className="btn gold">Log in</button>
-        {err && <p className="err" role="alert">{err}</p>}
       </form>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { api } from '../api.js';
+import { useToast } from '../components/Toast.jsx';
 
 const PHOTO = '/profile.jpg'; // fallback photo (client/public/profile.jpg); the real one lives in the DB "photo" field
 const CV_URL = '/Prajwal_Mogaveera_CV.pdf'; // client/public/Prajwal_Mogaveera_CV.pdf
@@ -212,16 +213,25 @@ const Icon = ({ name, className = 'h-5 w-5' }) => (
 );
 
 function Contact({ p }) {
+  const toast = useToast();
   const [f, setF] = useState({ name: '', email: '', message: '', website: '' });
-  const [ok, setOk] = useState(false);
-  const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const send = async (e) => {
     e.preventDefault();
-    setMsg('');
+    if (busy) return;
+    const name = f.name.trim(), email = f.email.trim(), message = f.message.trim();
+    if (!name) return toast.error('Please enter your name.', 'Name is missing');
+    if (!email) return toast.error('Please enter your email address.', 'Email is missing');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error('That email address does not look right.', 'Check your email');
+    if (!message) return toast.error('Write a few words so I know how to help.', 'Message is empty');
     setBusy(true);
-    try { await api('/messages', { method: 'POST', body: f }); setF({ name: '', email: '', message: '', website: '' }); setOk(true); setMsg('Message sent. I will get back to you soon.'); }
-    catch (x) { setOk(false); setMsg(x.message); }
+    try {
+      await api('/messages', { method: 'POST', body: { ...f, name, email, message } });
+      setF({ name: '', email: '', message: '', website: '' });
+      toast.success('Thanks for reaching out. I will get back to you soon.', 'Message sent');
+    } catch (x) {
+      toast.error(x.message === 'Failed to fetch' ? 'Cannot reach the server. Please try again in a moment.' : x.message, 'Message not sent');
+    }
     setBusy(false);
   };
   const rows = [
@@ -249,21 +259,21 @@ function Contact({ p }) {
           })}
         </Reveal>
         <Reveal className={`${darkCard} p-6 sm:p-8`}>
-          <form className="aform dark-form" onSubmit={send} noValidate={false}>
+          <form className="aform dark-form" onSubmit={send} noValidate>
             <label>Name
-              <span className="field"><Icon name="user" className="field-icon" /><input name="name" autoComplete="name" required maxLength={100} placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span>
+              <span className="field"><Icon name="user" className="field-icon" /><input name="name" autoComplete="name" maxLength={100} placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span>
             </label>
             <label>Email
-              <span className="field"><Icon name="mail" className="field-icon" /><input name="email" autoComplete="email" type="email" required maxLength={150} placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span>
+              <span className="field"><Icon name="mail" className="field-icon" /><input name="email" autoComplete="email" type="email" maxLength={150} placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span>
             </label>
             <label>Message
-              <span className="field field-area"><Icon name="message" className="field-icon" /><textarea name="message" rows="5" required maxLength={5000} placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span>
+              <span className="field field-area"><Icon name="message" className="field-icon" /><textarea name="message" rows="5" maxLength={5000} placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span>
             </label>
             {/* honeypot: hidden from people, bots fill it in */}
             <input className="hidden" tabIndex={-1} autoComplete="off" aria-hidden name="website" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
             <div className="row">
               <button className="btn gold inline-flex items-center gap-2" disabled={busy}><Icon name="send" className="h-4 w-4" />{busy ? 'Sending...' : 'Send message'}</button>
-              <span role="status" aria-live="polite" className={`text-sm ${ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg}</span>
+              
             </div>
           </form>
         </Reveal>
