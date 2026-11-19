@@ -22,4 +22,5 @@ Public site at `/` (no login). Admin panel at `/admin` (JWT login). All content 
 - Client: `npm run build` and host `dist` (Vercel, Netlify). Set VITE_API_URL to `https://your-api/api`.
 
 ## Photo
-The hero uses `client/public/profile.png` (taken from your resume). Replace that file with a sharper photo, or paste an image URL in Admin > Profile > Photo.
+The photo is stored in the database (`profiles.photo`). `npm run seed` loads `client/public/profile.jpg` into it.
+To change it later: Admin > Profile > Photo > choose a file > Save. If the field is empty the site falls back to `client/public/profile.jpg`.

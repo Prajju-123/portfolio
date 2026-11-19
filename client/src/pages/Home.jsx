@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { api } from '../api.js';
 
-const PHOTO = '/profile.png'; // your photo from the resume (client/public/profile.png)
-const glass = 'rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-md';
+const PHOTO = '/profile.jpg'; // fallback photo (client/public/profile.jpg); the real one lives in the DB "photo" field
+const card = 'rounded-3xl border border-black/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]';
+const darkCard = 'rounded-3xl border border-white/10 bg-white/5';
 
 const Reveal = ({ children, className = '', x = 0 }) => (
   <motion.div className={className} initial={{ opacity: 0, y: 36, x }} whileInView={{ opacity: 1, y: 0, x: 0 }}
@@ -12,26 +13,17 @@ const Reveal = ({ children, className = '', x = 0 }) => (
   </motion.div>
 );
 
-const Section = ({ id, title, sub, children }) => (
-  <section id={id} className="mx-auto max-w-6xl scroll-mt-16 px-5 pb-10 pt-20 sm:px-8 md:pt-28">
-    <h2 className="text-4xl font-extrabold sm:text-5xl md:text-6xl">{title}</h2>
-    {sub && <p className="mt-4 max-w-xl text-paper/70">{sub}</p>}
-    {children}
+// tone: light (white), mist (soft gray), dark (black band)
+const TONES = { light: 'bg-paper text-ink', mist: 'bg-mist text-ink', dark: 'bg-ink text-white on-dark' };
+const Section = ({ id, title, sub, tone = 'light', children }) => (
+  <section id={id} className={`${TONES[tone]} scroll-mt-14`}>
+    <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
+      <h2 className="text-4xl font-extrabold sm:text-5xl md:text-6xl">{title}<span className="text-gold">.</span></h2>
+      {sub && <p className={`mt-4 max-w-xl ${tone === 'dark' ? 'text-white/70' : 'text-gray-600'}`}>{sub}</p>}
+      {children}
+    </div>
   </section>
 );
-
-// Background: the sky moves from midnight violet to a rose dawn as you travel down the page
-function Sky() {
-  const { scrollYProgress } = useScroll();
-  const backgroundColor = useTransform(scrollYProgress, [0, 0.35, 0.7, 1], ['#120a2a', '#2a1659', '#4a1d6b', '#7a2e5f']);
-  return (
-    <motion.div className="fixed inset-0 -z-10 overflow-hidden" style={{ backgroundColor }} aria-hidden>
-      <div className="absolute -left-32 top-10 h-96 w-96 rounded-full bg-violet-500/25 blur-[110px]" />
-      <div className="absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-orchid/20 blur-[120px]" />
-      <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-gold/10 blur-[120px]" />
-    </motion.div>
-  );
-}
 
 function Nav({ name }) {
   const { scrollYProgress } = useScroll();
@@ -39,13 +31,13 @@ function Nav({ name }) {
   const [open, setOpen] = useState(false);
   const links = [['journey', 'Journey'], ['toolkit', 'Toolkit'], ['work', 'Projects'], ['contact', 'Contact']];
   return (
-    <nav className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-night/60 backdrop-blur-xl">
+    <nav className="fixed inset-x-0 top-0 z-30 border-b border-black/10 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
-        <a href="#top" className="font-display text-xl font-extrabold">{name?.split(' ')[0]}</a>
+        <a href="#top" className="font-display text-xl font-extrabold">{name?.split(' ')[0]}<span className="text-gold">.</span></a>
         <div className="hidden gap-8 md:flex">
-          {links.map(([id, l]) => <a key={id} href={`#${id}`} className="text-sm font-medium text-paper/80 transition hover:text-gold">{l}</a>)}
+          {links.map(([id, l]) => <a key={id} href={`#${id}`} className="text-sm font-medium text-gray-600 transition hover:text-ink">{l}</a>)}
         </div>
-        <button className="rounded-full border border-white/25 px-4 py-1.5 text-sm md:hidden" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <button className="rounded-full border border-black/25 px-4 py-1.5 text-sm md:hidden" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
           {open ? 'Close' : 'Menu'}
         </button>
       </div>
@@ -53,7 +45,7 @@ function Nav({ name }) {
         {open && (
           <motion.div className="overflow-hidden md:hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
             <div className="flex flex-col px-5 pb-4">
-              {links.map(([id, l]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} className="border-t border-white/10 py-3 text-paper/90">{l}</a>)}
+              {links.map(([id, l]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} className="border-t border-black/10 py-3">{l}</a>)}
             </div>
           </motion.div>
         )}
@@ -68,42 +60,45 @@ function Hero({ p }) {
   const [i, setI] = useState(0);
   useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % roles.length), 2600); return () => clearInterval(t); }, [roles.length]);
   return (
-    <header id="top" className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-5 pb-20 pt-28 sm:px-8 lg:grid-cols-[1.35fr_1fr]">
-      <div className="order-2 text-center lg:order-1 lg:text-left">
-        <motion.p className="font-semibold text-gold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>Hello, I'm</motion.p>
-        <h1 aria-label={p.name} className="mt-2 text-[clamp(2.6rem,9.5vw,6rem)] font-extrabold">
-          {(p.name || '').split(' ').map((w, wi) => (
-            <span key={wi} className="mr-[0.25em] inline-block overflow-hidden whitespace-nowrap align-bottom">
-              {[...w].map((c, k) => (
-                <motion.span key={k} className="inline-block" initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 + (wi * 8 + k) * 0.045, duration: 0.6 }}>{c}</motion.span>
-              ))}
-            </span>
-          ))}
-        </h1>
-        <div className="mt-3 h-10 font-display text-xl font-bold text-mint sm:text-2xl md:text-3xl">
-          <AnimatePresence mode="wait">
-            <motion.span key={i} className="inline-block" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>{roles[i]}</motion.span>
-          </AnimatePresence>
-        </div>
-        <p className="mx-auto mt-3 max-w-md text-lg text-paper/70 lg:mx-0">{p.tagline}</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
-          <a className="btn gold" href="#journey">Start the journey</a>
-          <a className="btn" href="#contact">Say hello</a>
-        </div>
-      </div>
-
-      <motion.div className="order-1 justify-self-center lg:order-2" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 90 }}>
-        <div className="relative">
-          <motion.div className="absolute -inset-3 rounded-full bg-[conic-gradient(from_0deg,#ffc15e,#5eead4,#f472b6,#ffc15e)] opacity-80 blur-[3px]" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 20, ease: 'linear' }} />
-          <div className="relative aspect-square w-56 overflow-hidden rounded-full border-4 border-night bg-black shadow-2xl shadow-violet-900/60 sm:w-72 lg:w-80">
-            <img src={p.photo || PHOTO} alt={p.name} className="h-full w-full object-cover" onError={(e) => { if (!e.target.src.endsWith(PHOTO)) e.target.src = PHOTO; }} />
+    <header id="top" className="relative overflow-hidden bg-gradient-to-b from-white to-stone-100">
+      <div className="pointer-events-none absolute -right-24 top-24 h-96 w-96 rounded-full bg-amber-200/50 blur-[110px]" aria-hidden />
+      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-5 pb-20 pt-28 sm:px-8 lg:grid-cols-[1.35fr_1fr]">
+        <div className="order-2 text-center lg:order-1 lg:text-left">
+          <motion.p className="font-semibold text-amber-600" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>Hello, I'm</motion.p>
+          <h1 aria-label={p.name} className="mt-2 text-[clamp(2.6rem,9.5vw,6rem)] font-extrabold">
+            {(p.name || '').split(' ').map((w, wi) => (
+              <span key={wi} className="mr-[0.25em] inline-block overflow-hidden whitespace-nowrap align-bottom">
+                {[...w].map((c, k) => (
+                  <motion.span key={k} className="inline-block" initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 + (wi * 8 + k) * 0.045, duration: 0.6 }}>{c}</motion.span>
+                ))}
+              </span>
+            ))}
+          </h1>
+          <div className="mt-3 h-10 font-display text-xl font-bold text-gray-500 sm:text-2xl md:text-3xl">
+            <AnimatePresence mode="wait">
+              <motion.span key={i} className="inline-block border-b-4 border-gold" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>{roles[i]}</motion.span>
+            </AnimatePresence>
+          </div>
+          <p className="mx-auto mt-4 max-w-md text-lg text-gray-600 lg:mx-0">{p.tagline}</p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+            <a className="btn gold" href="#journey">Start the journey</a>
+            <a className="btn" href="#contact">Say hello</a>
           </div>
         </div>
-      </motion.div>
 
-      <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-paper/60 sm:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
-        Scroll and the road starts here
-      </motion.p>
+        <motion.div className="order-1 justify-self-center lg:order-2" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 90 }}>
+          <div className="relative">
+            <motion.div className="absolute -inset-3 rounded-full bg-[conic-gradient(from_0deg,#f59e0b,#111111,#9ca3af,#f59e0b)]" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 18, ease: 'linear' }} />
+            <div className="relative aspect-square w-56 overflow-hidden rounded-full border-[6px] border-white bg-white shadow-2xl sm:w-72 lg:w-80">
+              <img src={p.photo || PHOTO} alt={p.name} className="h-full w-full object-cover" onError={(e) => { if (!e.target.src.endsWith(PHOTO)) e.target.src = PHOTO; }} />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 sm:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+          Scroll and the road starts here
+        </motion.p>
+      </div>
     </header>
   );
 }
@@ -111,11 +106,13 @@ function Hero({ p }) {
 function About({ p }) {
   const facts = [['Based in', p.location && [p.location]], ['Speaks', p.languages], ['Strengths', p.softSkills], ['Off the clock', p.hobbies]].filter(([, v]) => v?.length);
   return (
-    <section className="mx-auto grid max-w-6xl gap-8 px-5 pb-4 sm:px-8 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12">
-      <Reveal><p className="text-xl leading-relaxed sm:text-2xl">{p.summary}</p></Reveal>
-      <Reveal className={`${glass} grid gap-3 p-6`}>
-        {facts.map(([k, v]) => <p key={k}><b className="mr-2 text-gold">{k}</b><span className="text-paper/80">{v.join(', ')}</span></p>)}
-      </Reveal>
+    <section className="bg-stone-100">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 pb-20 sm:px-8 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12">
+        <Reveal><p className="text-xl leading-relaxed text-gray-800 sm:text-2xl">{p.summary}</p></Reveal>
+        <Reveal className={`${card} grid gap-3 p-6`}>
+          {facts.map(([k, v]) => <p key={k}><b className="mr-2 text-amber-600">{k}</b><span className="text-gray-700">{v.join(', ')}</span></p>)}
+        </Reveal>
+      </div>
     </section>
   );
 }
@@ -128,22 +125,22 @@ function Journey({ items }) {
   return (
     <Section id="journey" title="The journey so far" sub="From a school in Kundapura to enterprise apps in Bengaluru. Keep scrolling to follow the road.">
       <div className="relative mt-14" ref={ref}>
-        <div className="absolute inset-y-0 left-[18px] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,rgba(255,255,255,.28)_0_14px,transparent_14px_28px)] md:left-1/2" />
+        <div className="absolute inset-y-0 left-[18px] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,.22)_0_14px,transparent_14px_28px)] md:left-1/2" />
         <motion.div className="absolute inset-y-0 left-[18px] w-1 origin-top -translate-x-1/2 rounded bg-gold md:left-1/2" style={{ scaleY: fill }} />
-        <motion.div className="absolute left-[18px] z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold shadow-[0_0_0_8px_rgba(255,193,94,.25),0_0_34px_#ffc15e] md:left-1/2" style={{ top }} />
+        <motion.div className="absolute left-[18px] z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-gold shadow-[0_0_0_6px_rgba(245,158,11,.3)] md:left-1/2" style={{ top }} />
         {items.map((m, i) => {
           const left = i % 2 === 0;
           const work = m.kind === 'work';
           return (
             <Reveal key={m._id} x={left ? -50 : 50} className={`relative mb-12 w-full pl-12 md:w-1/2 md:px-12 ${left ? 'md:text-right' : 'md:ml-[50%]'}`}>
-              <span className={`absolute top-6 h-4 w-4 rounded-full left-[10px] ${left ? 'md:left-auto md:-right-2' : 'md:-left-2'} ${work ? 'bg-mint shadow-[0_0_0_6px_rgba(94,234,212,.22)]' : 'bg-gold shadow-[0_0_0_6px_rgba(255,193,94,.22)]'}`} />
-              <div className={`${glass} p-5 text-left sm:p-6 ${left ? 'md:text-right' : ''}`}>
-                <small className="font-medium text-paper/60">{m.from}{m.to && ` to ${m.to}`}</small>
+              <span className={`absolute left-[10px] top-6 h-4 w-4 rounded-full ${left ? 'md:left-auto md:-right-2' : 'md:-left-2'} ${work ? 'bg-ink shadow-[0_0_0_6px_rgba(17,17,17,.12)]' : 'bg-gold shadow-[0_0_0_6px_rgba(245,158,11,.25)]'}`} />
+              <div className={`${card} p-5 text-left sm:p-6 ${left ? 'md:text-right' : ''}`}>
+                <small className="font-medium text-gray-500">{m.from}{m.to && ` to ${m.to}`}</small>
                 <h3 className="mt-1 text-2xl font-bold">{m.title}</h3>
-                <p className="font-semibold">{m.org}{m.place && `, ${m.place}`}</p>
-                {m.grade && <p className={`font-semibold ${work ? 'text-mint' : 'text-gold'}`}>{m.grade}</p>}
-                {m.story && <p className="mt-2 text-paper/70">{m.story}</p>}
-                {!!m.points?.length && <ul className="mt-3 list-disc space-y-1 pl-5 text-left text-sm text-paper/90">{m.points.map((t) => <li key={t}>{t}</li>)}</ul>}
+                <p className="font-semibold text-gray-800">{m.org}{m.place && `, ${m.place}`}</p>
+                {m.grade && <p className="font-semibold text-amber-600">{m.grade}</p>}
+                {m.story && <p className="mt-2 text-gray-600">{m.story}</p>}
+                {!!m.points?.length && <ul className="mt-3 list-disc space-y-1 pl-5 text-left text-sm text-gray-700">{m.points.map((t) => <li key={t}>{t}</li>)}</ul>}
               </div>
             </Reveal>
           );
@@ -154,13 +151,13 @@ function Journey({ items }) {
 }
 
 const Skills = ({ items }) => (
-  <Section id="toolkit" title="What I carry with me">
+  <Section id="toolkit" title="What I carry with me" tone="dark">
     <div className="mt-10 grid gap-5 md:grid-cols-3">
       {items.map((g) => (
-        <Reveal key={g._id} className={`${glass} p-6`}>
-          <h3 className="mb-4 text-xl font-bold text-mint">{g.category}</h3>
+        <Reveal key={g._id} className={`${darkCard} p-6`}>
+          <h3 className="mb-4 text-xl font-bold text-gold">{g.category}</h3>
           <div className="flex flex-wrap gap-2">
-            {g.items.map((s) => <motion.span key={s} whileHover={{ y: -3, scale: 1.06 }} className="cursor-default rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-sm font-medium">{s}</motion.span>)}
+            {g.items.map((s) => <motion.span key={s} whileHover={{ y: -3, scale: 1.06 }} className="cursor-default rounded-full border border-white/20 px-3.5 py-1 text-sm font-medium transition-colors hover:border-gold hover:text-gold">{s}</motion.span>)}
           </div>
         </Reveal>
       ))}
@@ -169,26 +166,26 @@ const Skills = ({ items }) => (
 );
 
 const Projects = ({ items, certs }) => (
-  <Section id="work" title="Things I've built">
+  <Section id="work" title="Things I've built" tone="mist">
     <div className="mt-10">
       {items.map((p) => (
-        <Reveal key={p._id} className="grid gap-3 border-t border-white/10 py-7 md:grid-cols-[1fr_2fr] md:gap-10">
-          <div><h3 className="text-2xl font-bold">{p.title}</h3><p className="text-gold">{p.role}</p></div>
+        <Reveal key={p._id} className="grid gap-3 border-t border-black/10 py-7 md:grid-cols-[1fr_2fr] md:gap-10">
+          <div><h3 className="text-2xl font-bold">{p.title}</h3><p className="text-amber-600">{p.role}</p></div>
           <div>
-            <p className="text-paper/80">{p.description}</p>
-            <div className="my-3 flex flex-wrap gap-2">{p.tech?.map((t) => <span key={t} className="rounded-full border border-mint/40 px-3 py-0.5 text-xs font-medium text-mint">{t}</span>)}</div>
+            <p className="text-gray-700">{p.description}</p>
+            <div className="my-3 flex flex-wrap gap-2">{p.tech?.map((t) => <span key={t} className="rounded-full border border-amber-500 bg-amber-50 px-3 py-0.5 text-xs font-medium text-amber-800">{t}</span>)}</div>
             <div className="flex gap-4 text-sm">
-              {p.link && <a className="text-gold underline underline-offset-4" href={p.link} target="_blank" rel="noreferrer">Live site</a>}
-              {p.github && <a className="text-gold underline underline-offset-4" href={p.github} target="_blank" rel="noreferrer">Code</a>}
+              {p.link && <a className="font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4" href={p.link} target="_blank" rel="noreferrer">Live site</a>}
+              {p.github && <a className="font-semibold text-ink underline decoration-gold decoration-2 underline-offset-4" href={p.github} target="_blank" rel="noreferrer">Code</a>}
             </div>
           </div>
         </Reveal>
       ))}
     </div>
     {!!certs.length && (
-      <Reveal className={`${glass} mt-12 p-6`}>
+      <Reveal className={`${card} mt-12 p-6`}>
         <h3 className="mb-3 text-2xl font-bold">Certifications</h3>
-        <ul className="list-disc space-y-1 pl-5">{certs.map((c) => <li key={c._id}>{c.link ? <a className="text-gold underline underline-offset-4" href={c.link} target="_blank" rel="noreferrer">{c.title}</a> : c.title}, <span className="text-paper/70">{c.issuer}</span></li>)}</ul>
+        <ul className="list-disc space-y-1 pl-5 marker:text-gold">{certs.map((c) => <li key={c._id}>{c.link ? <a className="underline decoration-gold decoration-2 underline-offset-4" href={c.link} target="_blank" rel="noreferrer">{c.title}</a> : c.title}, <span className="text-gray-600">{c.issuer}</span></li>)}</ul>
       </Reveal>
     )}
   </Section>
@@ -227,17 +224,16 @@ function Contact({ p }) {
     ['linkedin', 'LinkedIn', p.linkedin && 'Connect with me', p.linkedin],
     ['github', 'GitHub', p.github && 'See my code', p.github],
   ].filter((r) => r[2]);
-  const field = 'relative';
   const ico = 'pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-gold';
   return (
-    <Section id="contact" title="Get in touch" sub="The road continues. Tell me about your next stop and I will reply soon.">
+    <Section id="contact" title="Get in touch" tone="dark" sub="The road continues. Tell me about your next stop and I will reply soon.">
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-        <Reveal className={`${glass} grid content-start gap-5 p-6 sm:p-8`}>
+        <Reveal className={`${darkCard} grid content-start gap-5 p-6 sm:p-8`}>
           {rows.map(([icon, label, value, href]) => {
             const body = (
               <>
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold/15 text-gold transition group-hover:bg-gold group-hover:text-night"><Icon name={icon} /></span>
-                <span className="min-w-0"><span className="block text-sm text-paper/60">{label}</span><span className="block break-words font-semibold sm:text-lg">{value}</span></span>
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold/15 text-gold transition group-hover:bg-gold group-hover:text-ink"><Icon name={icon} /></span>
+                <span className="min-w-0"><span className="block text-sm text-white/60">{label}</span><span className="block break-words font-semibold sm:text-lg">{value}</span></span>
               </>
             );
             const cls = 'group flex items-center gap-4';
@@ -246,14 +242,14 @@ function Contact({ p }) {
               : <div key={label} className={cls}>{body}</div>;
           })}
         </Reveal>
-        <Reveal className={`${glass} p-6 sm:p-8`}>
-          <form className="aform" onSubmit={send}>
-            <label>Name<span className={field}><Icon name="user" className={ico} /><input className="pl-11" required placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span></label>
-            <label>Email<span className={field}><Icon name="mail" className={ico} /><input className="pl-11" type="email" required placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span></label>
-            <label>Message<span className={field}><Icon name="message" className={ico} /><textarea className="pl-11" rows="5" required placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span></label>
+        <Reveal className={`${darkCard} p-6 sm:p-8`}>
+          <form className="aform dark-form" onSubmit={send}>
+            <label>Name<span className="relative"><Icon name="user" className={ico} /><input className="pl-11" required placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span></label>
+            <label>Email<span className="relative"><Icon name="mail" className={ico} /><input className="pl-11" type="email" required placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span></label>
+            <label>Message<span className="relative"><Icon name="message" className={ico} /><textarea className="pl-11" rows="5" required placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span></label>
             <div className="row">
               <button className="btn gold inline-flex items-center gap-2" disabled={busy}><Icon name="send" className="h-4 w-4" />{busy ? 'Sending...' : 'Send message'}</button>
-              <span role="status" className="text-sm text-paper/80">{msg}</span>
+              <span role="status" className="text-sm text-white/80">{msg}</span>
             </div>
           </form>
         </Reveal>
@@ -270,7 +266,6 @@ export default function Home() {
   if (!d) return <p className="grid min-h-screen place-items-center">Loading the journey...</p>;
   return (
     <>
-      <Sky />
       <Nav name={d.profile.name} />
       <Hero p={d.profile} />
       <About p={d.profile} />
@@ -278,7 +273,7 @@ export default function Home() {
       <Skills items={d.skills} />
       <Projects items={d.projects} certs={d.certifications} />
       <Contact p={d.profile} />
-      <footer className="px-5 py-16 text-center text-sm text-paper/60">{d.profile.name} <a href="/admin/login" className="ml-2 underline underline-offset-4">Admin</a></footer>
+      <footer className="bg-ink px-5 pb-12 text-center text-sm text-white/50">{d.profile.name} <a href="/admin/login" className="ml-2 underline underline-offset-4">Admin</a></footer>
     </>
   );
 }

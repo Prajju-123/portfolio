@@ -9,7 +9,7 @@ const CFG = {
   projects: { label: 'Projects', fields: [['title'], ['role'], ['description', 'textarea'], ['tech', 'list'], ['link'], ['github'], ['order', 'number']] },
   certifications: { label: 'Certifications', fields: [['title'], ['issuer'], ['link'], ['order', 'number']] },
 };
-const PROFILE = [['name'], ['title'], ['tagline'], ['roles', 'list'], ['summary', 'textarea'], ['location'], ['email'], ['phone'], ['linkedin'], ['github'], ['photo'], ['softSkills', 'list'], ['languages', 'list'], ['hobbies', 'list']];
+const PROFILE = [['name'], ['title'], ['tagline'], ['roles', 'list'], ['summary', 'textarea'], ['location'], ['email'], ['phone'], ['linkedin'], ['github'], ['photo', 'image'], ['softSkills', 'list'], ['languages', 'list'], ['hobbies', 'list']];
 
 const clean = (v, fields) => {
   const o = { ...v };
@@ -17,8 +17,30 @@ const clean = (v, fields) => {
   return o;
 };
 
+// Resize an uploaded image to max 600px and return a JPEG data URL (saved in the profile's "photo" field)
+const shrink = (file, max = 600) => new Promise((res, rej) => {
+  const img = new Image();
+  img.onload = () => {
+    const s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    res(c.toDataURL('image/jpeg', 0.85));
+  };
+  img.onerror = rej;
+  img.src = URL.createObjectURL(file);
+});
+
 function Field({ f: [k, type = 'text', opts], v, set }) {
   const val = type === 'list' ? (v || []).join('\n') : v ?? '';
+  if (type === 'image') return (
+    <label>
+      {k}
+      <input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files[0]; if (f) set(k, await shrink(f)); }} />
+      {v && <img src={v} alt="Current photo" className="mt-1 h-24 w-24 rounded-full border border-black/10 object-cover" />}
+      <small>Pick an image. It is resized and saved in the database. Click Save to apply.</small>
+    </label>
+  );
   const on = (e) => set(k, type === 'list' ? e.target.value.split('\n') : type === 'number' ? Number(e.target.value) : e.target.value);
   return (
     <label>

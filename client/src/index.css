@@ -4,33 +4,35 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { @apply bg-night font-body text-base leading-relaxed text-paper antialiased; }
+  body { @apply bg-paper font-body text-base leading-relaxed text-ink antialiased; }
   h1, h2, h3 { @apply font-display leading-tight; }
-  :focus-visible { outline: 3px solid #5eead4; outline-offset: 3px; }
+  :focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
 }
 
-/* Shared by the contact form and the admin panel */
+/* Buttons, forms and admin panel (light theme; .dark-form is used on the black contact band) */
 @layer components {
-  .btn { @apply inline-block cursor-pointer rounded-full border border-paper/70 bg-transparent px-5 py-2.5 text-sm font-semibold text-paper no-underline transition duration-200 hover:-translate-y-0.5 hover:bg-white/10; }
-  .btn.gold { @apply border-gold bg-gold text-night hover:bg-[#ffd07f]; }
+  .btn { @apply inline-block cursor-pointer rounded-full border-2 border-ink bg-transparent px-5 py-2.5 text-sm font-semibold text-ink no-underline transition duration-200 hover:-translate-y-0.5 hover:bg-ink hover:text-white disabled:opacity-60; }
+  .btn.gold { @apply border-gold bg-gold text-ink hover:bg-amber-400 hover:text-ink; }
+  .on-dark .btn.gold { @apply border-gold bg-gold text-ink hover:bg-amber-400; }
   .aform { @apply grid gap-4; }
   .aform label { @apply grid gap-1.5 text-sm font-semibold capitalize; }
-  .aform input, .aform textarea, .aform select { @apply w-full rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-base font-normal normal-case text-paper placeholder:text-paper/40; }
-  .aform select option { @apply text-night; }
-  .aform small { @apply font-normal normal-case text-paper/60; }
+  .aform input, .aform textarea, .aform select { @apply w-full rounded-xl border border-black/15 bg-white px-3.5 py-2.5 text-base font-normal normal-case text-ink placeholder:text-gray-400; }
+  .aform small { @apply font-normal normal-case text-gray-500; }
   .aform .row { @apply flex flex-wrap items-center gap-3; }
-  .aform .err, .err { @apply text-red-300; }
+  .err { @apply text-red-600; }
+  .dark-form input, .dark-form textarea { @apply border-white/15 bg-white/10 text-white placeholder:text-white/40; }
   .admin { @apply mx-auto max-w-4xl px-5 pb-20 pt-8 sm:px-8; }
   .admin.login { @apply grid min-h-screen place-items-center; }
-  .admin.login .aform { @apply w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-xl; }
+  .admin.login .aform { @apply w-full max-w-sm rounded-3xl border border-black/10 bg-white p-7 shadow-xl; }
   .abar { @apply mb-6 flex flex-wrap items-center justify-between gap-3; }
   .abar h1 { @apply text-2xl font-bold; }
   .abar span { @apply flex items-center gap-3; }
+  .abar a { @apply font-medium text-amber-700 underline underline-offset-4; }
   .tabs { @apply mb-7 flex flex-wrap gap-2; }
-  .tabs button { @apply rounded-full border border-white/20 px-4 py-2 text-sm font-medium transition hover:bg-white/10; }
-  .tabs .on { @apply border-gold bg-gold text-night hover:bg-gold; }
+  .tabs button { @apply rounded-full border border-black/20 px-4 py-2 text-sm font-medium transition hover:bg-black/5; }
+  .tabs .on { @apply border-gold bg-gold text-ink hover:bg-gold; }
   .alist { @apply mt-5 list-none p-0; }
-  .alist li { @apply flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-3; }
+  .alist li { @apply flex flex-wrap items-center justify-between gap-3 border-t border-black/10 py-3; }
   .alist .btn { @apply px-3.5 py-1.5; }
   .msgs li { @apply items-start; }
 }

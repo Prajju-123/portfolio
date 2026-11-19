@@ -2,7 +2,13 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import fs from 'fs';
 import { Admin, Profile, Milestone, Skill, Project, Certification } from './models/index.js';
+
+// Photo is stored in the database as a data URL (client/public/profile.jpg)
+let photo = '';
+try { photo = 'data:image/jpeg;base64,' + fs.readFileSync(new URL('../client/public/profile.jpg', import.meta.url)).toString('base64'); }
+catch { console.log('No client/public/profile.jpg found, photo left empty'); }
 
 await mongoose.connect(process.env.MONGO_URI);
 await Promise.all([Admin, Profile, Milestone, Skill, Project, Certification].map((M) => M.deleteMany({})));
@@ -15,7 +21,7 @@ await Profile.create({
   tagline: 'I turn business workflows into fast, friendly interfaces.',
   summary: 'Software Developer with 2+ years of experience building responsive, scalable web applications using the MERN stack (React.js, Node.js, MongoDB). Skilled in developing reusable UI components and integrating REST APIs to deliver efficient, user-focused enterprise solutions.',
   location: 'Yelachenahalli, Bengaluru', email: 'prajjumogaveera2001@gmail.com', phone: '9632906738',
-  linkedin: 'https://linkedin.com/in/prajwal-mogaveera-0a9128252', github: 'https://github.com/Prajju-123', photo: '/profile.png',
+  linkedin: 'https://linkedin.com/in/prajwal-mogaveera-0a9128252', github: 'https://github.com/Prajju-123', photo,
   softSkills: ['Communication', 'Problem Solving', 'Teamwork', 'Team Building'],
   languages: ['English', 'Hindi', 'Kannada'], hobbies: ['Cricket', 'Badminton'],
 });
