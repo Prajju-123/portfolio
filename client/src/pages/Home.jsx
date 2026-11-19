@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
@@ -9,9 +10,6 @@ import {
 import { api } from "../api.js";
 import { useToast } from "../components/Toast.jsx";
 
-const PHOTO = "/profile.jpg"; // fallback photo (client/public/profile.jpg); the real one lives in the DB "photo" field
-const CV_URL = "/Prajwal_Mogaveera_CV.pdf"; // client/public/Prajwal_Mogaveera_CV.pdf
-const CV_NAME = "Prajwal_Mogaveera_CV.pdf";
 const card =
   "rounded-3xl border border-black/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]";
 const darkCard = "rounded-3xl border border-white/10 bg-white/5";
@@ -57,10 +55,38 @@ function Nav() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
   const [open, setOpen] = useState(false);
+  const goTo = useSectionNav();
+  const { pathname } = useLocation();
+  const fromPath = pathname.replace(/^\//, "") || "home";
+  const [active, setActive] = useState(fromPath);
+  const lockUntil = useRef(0);
+  // clicking / opening a path highlights that tab right away (scroll-spy pauses while the page scrolls there)
+  useEffect(() => {
+    setActive(fromPath);
+    lockUntil.current = Date.now() + 1200;
+  }, [fromPath]);
+  // scrolling by hand moves the highlight to the section in view
+  useEffect(() => {
+    const ids = [["home", "home"], ["journey", "journey"], ["toolkit", "toolkit"], ["projects", "work"], ["contact", "contact"]];
+    const onScroll = () => {
+      if (Date.now() < lockUntil.current) return;
+      const line = 48 + window.innerHeight * 0.35;
+      let cur = "home";
+      for (const [key, el] of ids) {
+        const n = document.getElementById(el);
+        if (n && n.getBoundingClientRect().top <= line) cur = key;
+      }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = "contact";
+      setActive(cur);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const links = [
+    ["home", "Home"],
     ["journey", "Journey"],
     ["toolkit", "Toolkit"],
-    ["work", "Projects"],
+    ["projects", "Projects"],
     ["contact", "Contact"],
   ];
   return (
@@ -70,8 +96,10 @@ function Nav() {
           {links.map(([id, l]) => (
             <a
               key={id}
-              href={`#${id}`}
-              className="text-sm font-medium text-gray-600 transition hover:text-ink"
+              href={`/${id}`}
+              onClick={(e) => goTo(e, id)}
+              aria-current={active === id ? "page" : undefined}
+              className={`border-b-[3px] py-1 text-sm font-medium transition hover:text-ink ${active === id ? "border-gold text-ink" : "border-transparent text-gray-600"}`}
             >
               {l}
             </a>
@@ -113,11 +141,19 @@ function Nav() {
               {links.map(([id, l]) => (
                 <a
                   key={id}
-                  href={`#${id}`}
-                  onClick={() => setOpen(false)}
-                  className="border-t border-black/10 py-3 text-sm font-medium"
+                  href={`/${id}`}
+                  onClick={(e) => {
+                    setOpen(false);
+                    goTo(e, id);
+                  }}
+                  aria-current={active === id ? "page" : undefined}
+                  className="border-t border-black/10 py-2"
                 >
-                  {l}
+                  <span
+                    className={`inline-block border-b-[3px] py-1 text-sm font-medium ${active === id ? "border-gold text-ink" : "border-transparent text-gray-600"}`}
+                  >
+                    {l}
+                  </span>
                 </a>
               ))}
             </div>
@@ -132,7 +168,27 @@ function Nav() {
   );
 }
 
+// Sections live on one page; each has its own clean path (/home, /journey, /toolkit, /work, /contact).
+function scrollToSection(id) {
+  const el = id === "home" ? null : document.getElementById(id === "projects" ? "work" : id);
+  const top = el ? el.getBoundingClientRect().top + window.scrollY - 48 : 0; // fixed nav is 48px tall
+  window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+}
+
+function useSectionNav() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  return (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const path = `/${id}`;
+    if (pathname === path) requestAnimationFrame(() => scrollToSection(id));
+    else navigate(path);
+  };
+}
+
 function Hero({ p }) {
+  const goTo = useSectionNav();
   const roles = p.roles?.length ? p.roles : [p.title];
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -141,7 +197,7 @@ function Hero({ p }) {
   }, [roles.length]);
   return (
     <header
-      id="top"
+      id="home"
       className="relative overflow-hidden bg-gradient-to-b from-white to-stone-100"
     >
       <div
@@ -197,22 +253,28 @@ function Hero({ p }) {
           </AnimatePresence>
         </div>
 
-        <p className="hero-tag max-w-md text-sm text-gray-600 sm:text-base lg:text-lg">
+        <p className="hero-tag text-sm text-gray-600 sm:text-base lg:text-lg">
           {p.tagline}
         </p>
 
         <div className="hero-cta flex flex-wrap gap-3">
-          <a className="btn gold" href="#journey">
+          <a
+            className="btn gold"
+            href="/journey"
+            onClick={(e) => goTo(e, "journey")}
+          >
             Start the journey
           </a>
-          <a
-            className="btn inline-flex items-center gap-2"
-            href={CV_URL}
-            download={CV_NAME}
-          >
-            <Icon name="download" className="h-4 w-4" />
-            Download CV
-          </a>
+          {p.cv && (
+            <a
+              className="btn inline-flex items-center gap-2"
+              href={p.cv}
+              download={p.cvName || "CV.pdf"}
+            >
+              <Icon name="download" className="h-4 w-4" />
+              Download CV
+            </a>
+          )}
         </div>
 
         <motion.div
@@ -227,15 +289,18 @@ function Hero({ p }) {
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
             />
-            <div className="relative aspect-square w-[clamp(7rem,30vw,20rem)] overflow-hidden rounded-full border-4 border-white bg-white shadow-2xl sm:border-[6px]">
-              <img
-                src={p.photo || PHOTO}
-                alt={p.name}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  if (!e.target.src.endsWith(PHOTO)) e.target.src = PHOTO;
-                }}
-              />
+            <div className="relative aspect-square w-[clamp(6.5rem,27vw,20rem)] overflow-hidden rounded-full border-4 border-white bg-white shadow-2xl sm:border-[6px]">
+              {p.photo ? (
+                <img
+                  src={p.photo}
+                  alt={p.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="grid h-full w-full place-items-center bg-ink font-display text-5xl font-extrabold text-gold">
+                  {(p.name || "?").charAt(0)}
+                </span>
+              )}
             </div>
           </div>
         </motion.div>
@@ -261,16 +326,16 @@ function About({ p }) {
   ].filter(([, v]) => v?.length);
   return (
     <section className="overflow-x-clip bg-stone-100">
-      <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-10 sm:px-8 sm:pb-14 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12 lg:pb-16">
+      <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-12 pt-2 sm:px-8 sm:pb-16 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12 lg:pb-20">
         <Reveal>
-          <p className="text-base leading-relaxed text-gray-800 sm:text-lg lg:text-2xl">
+          <p className="border-l-4 border-gold pl-4 text-justify text-[0.95rem] leading-[1.8] text-gray-800 [hyphens:auto] [text-justify:inter-word] sm:pl-6 sm:text-lg lg:text-xl lg:leading-[1.85]">
             {p.summary}
           </p>
         </Reveal>
-        <Reveal className={`${card} grid gap-3 p-6`}>
+        <Reveal className={`${card} grid gap-4 p-5 text-sm sm:p-6 sm:text-base`}>
           {facts.map(([k, v]) => (
-            <p key={k}>
-              <b className="mr-2 text-amber-600">{k}</b>
+            <p key={k} className="leading-relaxed">
+              <b className="mr-2 block text-xs uppercase tracking-wider text-amber-600 sm:inline sm:text-sm sm:normal-case sm:tracking-normal">{k}</b>
               <span className="text-gray-700">{v.join(", ")}</span>
             </p>
           ))}
@@ -280,7 +345,7 @@ function About({ p }) {
   );
 }
 
-function Journey({ items }) {
+function Journey({ items, intro }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -292,7 +357,7 @@ function Journey({ items }) {
     <Section
       id="journey"
       title="The journey so far"
-      sub="From a school in Kundapura to enterprise apps in Bengaluru. Keep scrolling to follow the road."
+      sub={intro}
     >
       <div className="relative mt-8 sm:mt-12" ref={ref}>
         <div className="absolute inset-y-0 left-[18px] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,.22)_0_14px,transparent_14px_28px)] md:left-1/2" />
@@ -687,6 +752,20 @@ function Contact({ p }) {
 export default function Home() {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
+  const { pathname } = useLocation();
+  // scroll to the section named by the path once the page content is on screen
+  useEffect(() => {
+    if (!d) return;
+    const id = pathname.replace(/^\//, "");
+    if (!id) return;
+    const t = setTimeout(() => scrollToSection(id), 150);
+    return () => clearTimeout(t);
+  }, [pathname, d]);
+  // browser tab title comes from the database too
+  useEffect(() => {
+    const pr = d?.profile;
+    if (pr?.name) document.title = `${pr.name}${pr.title ? ` | ${pr.title}` : ""}`;
+  }, [d]);
   useEffect(() => {
     api("/portfolio")
       .then(setD)
@@ -709,7 +788,7 @@ export default function Home() {
       <Nav />
       <Hero p={d.profile} />
       <About p={d.profile} />
-      <Journey items={d.milestones} />
+      <Journey items={d.milestones} intro={d.profile.journeyIntro} />
       <Skills items={d.skills} />
       <Projects items={d.projects} certs={d.certifications} />
       <Contact p={d.profile} />

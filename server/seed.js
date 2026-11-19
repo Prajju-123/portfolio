@@ -32,8 +32,9 @@ await Promise.all(
 );
 
 await Admin.create({
+  username: (process.env.ADMIN_USERNAME || 'admin').toLowerCase(),
   email: process.env.ADMIN_EMAIL,
-  password: await bcrypt.hash(process.env.ADMIN_PASSWORD, 10),
+  password: process.env.ADMIN_PASSWORD, // hashed by the Admin model
 });
 
 await Profile.create({

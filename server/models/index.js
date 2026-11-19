@@ -1,11 +1,25 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 const m = (name, def) => mongoose.model(name, new mongoose.Schema(def, { timestamps: true }));
 
-export const Admin = m('Admin', { email: { type: String, unique: true, lowercase: true }, password: String });
+// Admin account. Log in with username + password. Passwords are always stored as bcrypt hashes:
+// if you type a plain password straight into MongoDB Compass, it is hashed automatically the next time that admin logs in.
+const adminSchema = new mongoose.Schema({
+  username: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+  email: { type: String, lowercase: true, trim: true },
+  password: String,
+  resetCode: String, resetExpires: Date, resetTries: { type: Number, default: 0 }, // "Forgot password" one-time code (hashed)
+}, { timestamps: true });
+export const isHash = (v = '') => /^\$2[aby]\$\d{2}\$.{53}$/.test(v);
+adminSchema.pre('save', async function () {
+  if (this.isModified('password') && !isHash(this.password)) this.password = await bcrypt.hash(this.password, 10);
+});
+export const Admin = mongoose.model('Admin', adminSchema);
 
 export const Profile = m('Profile', {
   name: String, title: String, tagline: String, summary: String, location: String,
   email: String, phone: String, linkedin: String, github: String, photo: String,
+  journeyIntro: String, cv: String, cvName: String, // cv = PDF stored as a data URL
   roles: [String], softSkills: [String], languages: [String], hobbies: [String],
 });
 

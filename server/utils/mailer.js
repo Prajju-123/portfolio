@@ -34,6 +34,22 @@ export async function sendContactMail({ name, email, message }) {
   return info;
 }
 
+// Sends the 6-digit "Forgot password" code to the admin's email address.
+export async function sendResetCodeMail({ to, username, code }) {
+  return getTransporter().sendMail({
+    from: `"Portfolio Admin" <${process.env.MAIL_USER}>`,
+    to,
+    subject: `Your password reset code: ${code}`,
+    text: `Hi ${username},\n\nYour password reset code is ${code}. It is valid for 10 minutes.\nIf you did not ask for this, ignore this email.`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:480px">
+      <h2 style="margin:0 0 12px">Reset your admin password</h2>
+      <p>Hi ${esc(username)}, use this code to choose a new password. It is valid for 10 minutes.</p>
+      <p style="font-size:32px;letter-spacing:8px;font-weight:700;background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:12px 18px;display:inline-block">${esc(code)}</p>
+      <p style="color:#666;font-size:13px">If you did not ask for this, you can ignore this email.</p>
+    </div>`,
+  });
+}
+
 // Called once at startup so a wrong/missing App Password shows up in the terminal immediately.
 export async function checkMail() {
   try {
