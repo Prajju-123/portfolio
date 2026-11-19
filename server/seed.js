@@ -171,25 +171,25 @@ await Project.insertMany([
   {
     order: 1,
     title: "HRMS",
-    role: "Frontend Developer",
+    role: "Software Developer",
     description:
-      "Responsive HR management interface covering employee profiles, attendance, leave management, payroll views and role-based dashboards.",
+      "Responsive HR Management interface for employee profiles, attendance, leave management, payroll views, and role-based dashboards.",
     tech: ["React.js"],
   },
   {
     order: 2,
     title: "CRM Drive",
-    role: "Frontend Developer",
+    role: "Software Developer",
     description:
-      "Dashboard-style CRM tool for tracking leads, contacts and deals, with dynamic filtering, search, pipeline views and REST API integration for real-time data.",
-    tech: ["React.js", "REST APIs"],
+      "Responsive CRM Drive interface for creating, assigning, and tracking tickets and orders, with role-based dashboards.",
+    tech: ["React.js"],
   },
   {
     order: 3,
     title: "AERP",
-    role: "Frontend Developer",
+    role: "Software Developer",
     description:
-      "Enterprise resource planning modules for inventory, procurement and reporting, with responsive dashboards that visualize business metrics.",
+      "Responsive ERP interface for customer, user, and vendor creation, material management, inventory, procurement, and reporting, with dashboards.",
     tech: ["React.js"],
   },
   {
@@ -197,7 +197,7 @@ await Project.insertMany([
     title: "Supra Diary Software Products",
     role: "MERN Stack Developer",
     description:
-      "Scalable e-commerce platform with server-side logic for product management, order processing and payment integration, backed by an efficient database design.",
+      "Responsive E-commerce platform for product management, order processing, and payment integration, with efficient database design and server-side logic.",
     tech: ["React.js", "Node.js", "MongoDB Atlas"],
   },
   {
@@ -205,15 +205,15 @@ await Project.insertMany([
     title: "Scholarship Management System",
     role: "Full Stack Developer",
     description:
-      "Web platform for managing scholarships, with a Python backend for processing applications and database interactions.",
-    tech: ["Python"],
+      "Responsive Scholarship Management platform for processing applications and managing database interactions, with a Python backend.",
+    tech: ["HTML", "CSS", "Python"],
   },
   {
     order: 6,
     title: "Style House Clothing Website",
-    role: "Frontend Developer",
+    role: "Full Stack Developer",
     description:
-      "Dynamic, responsive e-commerce website with JavaScript functionality for an enhanced user experience.",
+      "Responsive E-commerce website with JavaScript functionality for an enhanced user experience.",
     tech: ["HTML", "CSS", "JavaScript"],
   },
 ]);
