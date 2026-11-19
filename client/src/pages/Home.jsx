@@ -3,6 +3,8 @@ import { AnimatePresence, motion, useScroll, useSpring, useTransform } from 'fra
 import { api } from '../api.js';
 
 const PHOTO = '/profile.jpg'; // fallback photo (client/public/profile.jpg); the real one lives in the DB "photo" field
+const CV_URL = '/Prajwal_Mogaveera_CV.pdf'; // client/public/Prajwal_Mogaveera_CV.pdf
+const CV_NAME = 'Prajwal_Mogaveera_CV.pdf';
 const card = 'rounded-3xl border border-black/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]';
 const darkCard = 'rounded-3xl border border-white/10 bg-white/5';
 
@@ -16,7 +18,7 @@ const Reveal = ({ children, className = '', x = 0 }) => (
 // tone: light (white), mist (soft gray), dark (black band)
 const TONES = { light: 'bg-paper text-ink', mist: 'bg-mist text-ink', dark: 'bg-ink text-white on-dark' };
 const Section = ({ id, title, sub, tone = 'light', children }) => (
-  <section id={id} className={`${TONES[tone]} scroll-mt-14`}>
+  <section id={id} className={`${TONES[tone]} scroll-mt-14 overflow-x-clip`}>
     <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
       <h2 className="text-4xl font-extrabold sm:text-5xl md:text-6xl">{title}<span className="text-gold">.</span></h2>
       {sub && <p className={`mt-4 max-w-xl ${tone === 'dark' ? 'text-white/70' : 'text-gray-600'}`}>{sub}</p>}
@@ -62,40 +64,43 @@ function Hero({ p }) {
   return (
     <header id="top" className="relative overflow-hidden bg-gradient-to-b from-white to-stone-100">
       <div className="pointer-events-none absolute -right-24 top-24 h-96 w-96 rounded-full bg-amber-200/50 blur-[110px]" aria-hidden />
-      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-5 pb-20 pt-28 sm:px-8 lg:grid-cols-[1.35fr_1fr]">
-        <div className="order-2 text-center lg:order-1 lg:text-left">
-          <motion.p className="font-semibold text-amber-600" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>Hello, I'm</motion.p>
-          <h1 aria-label={p.name} className="mt-2 text-[clamp(2.6rem,9.5vw,6rem)] font-extrabold">
-            {(p.name || '').split(' ').map((w, wi) => (
-              <span key={wi} className="mr-[0.25em] inline-block overflow-hidden whitespace-nowrap align-bottom">
-                {[...w].map((c, k) => (
-                  <motion.span key={k} className="inline-block" initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 + (wi * 8 + k) * 0.045, duration: 0.6 }}>{c}</motion.span>
-                ))}
-              </span>
-            ))}
-          </h1>
-          <div className="mt-3 h-10 font-display text-xl font-bold text-gray-500 sm:text-2xl md:text-3xl">
-            <AnimatePresence mode="wait">
-              <motion.span key={i} className="inline-block border-b-4 border-gold" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>{roles[i]}</motion.span>
-            </AnimatePresence>
-          </div>
-          <p className="mx-auto mt-4 max-w-md text-lg text-gray-600 lg:mx-0">{p.tagline}</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
-            <a className="btn gold" href="#journey">Start the journey</a>
-            <a className="btn" href="#contact">Say hello</a>
-          </div>
+      {/* Same design on every screen: text on the left, photo on the right. Areas are defined in index.css (.hero-grid). */}
+      <div className="hero-grid relative mx-auto min-h-screen max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-28">
+        <motion.p className="hero-hello font-semibold text-amber-600" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>Hello, I'm</motion.p>
+
+        <h1 aria-label={p.name} className="hero-name font-extrabold">
+          {(p.name || '').split(' ').map((w, wi) => (
+            <span key={wi} className="mr-[0.25em] inline-block overflow-hidden whitespace-nowrap align-bottom">
+              {[...w].map((c, k) => (
+                <motion.span key={k} className="inline-block" initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 + (wi * 8 + k) * 0.045, duration: 0.6 }}>{c}</motion.span>
+              ))}
+            </span>
+          ))}
+        </h1>
+
+        <div className="hero-role font-display font-bold text-gray-500">
+          <AnimatePresence mode="wait">
+            <motion.span key={i} className="inline-block border-b-4 border-gold" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -18, opacity: 0 }}>{roles[i]}</motion.span>
+          </AnimatePresence>
         </div>
 
-        <motion.div className="order-1 justify-self-center lg:order-2" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 90 }}>
+        <p className="hero-tag max-w-md text-base text-gray-600 sm:text-lg">{p.tagline}</p>
+
+        <div className="hero-cta flex flex-wrap gap-3">
+          <a className="btn gold" href="#journey">Start the journey</a>
+          <a className="btn inline-flex items-center gap-2" href={CV_URL} download={CV_NAME}><Icon name="download" className="h-4 w-4" />Download CV</a>
+        </div>
+
+        <motion.div className="hero-photo" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 90 }}>
           <div className="relative">
-            <motion.div className="absolute -inset-3 rounded-full bg-[conic-gradient(from_0deg,#f59e0b,#111111,#9ca3af,#f59e0b)]" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 18, ease: 'linear' }} />
-            <div className="relative aspect-square w-56 overflow-hidden rounded-full border-[6px] border-white bg-white shadow-2xl sm:w-72 lg:w-80">
+            <motion.div className="absolute -inset-1.5 rounded-full bg-[conic-gradient(from_0deg,#f59e0b,#111111,#9ca3af,#f59e0b)] sm:-inset-3" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 18, ease: 'linear' }} />
+            <div className="relative aspect-square w-[clamp(7rem,30vw,20rem)] overflow-hidden rounded-full border-4 border-white bg-white shadow-2xl sm:border-[6px]">
               <img src={p.photo || PHOTO} alt={p.name} className="h-full w-full object-cover" onError={(e) => { if (!e.target.src.endsWith(PHOTO)) e.target.src = PHOTO; }} />
             </div>
           </div>
         </motion.div>
 
-        <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 sm:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+        <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 md:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
           Scroll and the road starts here
         </motion.p>
       </div>
@@ -106,7 +111,7 @@ function Hero({ p }) {
 function About({ p }) {
   const facts = [['Based in', p.location && [p.location]], ['Speaks', p.languages], ['Strengths', p.softSkills], ['Off the clock', p.hobbies]].filter(([, v]) => v?.length);
   return (
-    <section className="bg-stone-100">
+    <section className="overflow-x-clip bg-stone-100">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 pb-20 sm:px-8 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12">
         <Reveal><p className="text-xl leading-relaxed text-gray-800 sm:text-2xl">{p.summary}</p></Reveal>
         <Reveal className={`${card} grid gap-3 p-6`}>
@@ -152,7 +157,7 @@ function Journey({ items }) {
 
 const Skills = ({ items }) => (
   <Section id="toolkit" title="What I carry with me" tone="dark">
-    <div className="mt-10 grid gap-5 md:grid-cols-3">
+    <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((g) => (
         <Reveal key={g._id} className={`${darkCard} p-6`}>
           <h3 className="mb-4 text-xl font-bold text-gold">{g.category}</h3>
@@ -199,6 +204,7 @@ const ICONS = {
   github: <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 00-.9-2.6c3-.3 6.2-1.5 6.2-6.7a5.2 5.2 0 00-1.4-3.6 4.8 4.8 0 00-.1-3.6s-1.1-.3-3.7 1.4a12.8 12.8 0 00-6.7 0C6.8 2.8 5.7 3.1 5.7 3.1a4.8 4.8 0 00-.1 3.6A5.2 5.2 0 004.2 10.3c0 5.2 3.2 6.4 6.2 6.7a3.4 3.4 0 00-.9 2.6V22" />,
   user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
   message: <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />,
+  download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
   send: <><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></>,
 };
 const Icon = ({ name, className = 'h-5 w-5' }) => (
@@ -206,15 +212,16 @@ const Icon = ({ name, className = 'h-5 w-5' }) => (
 );
 
 function Contact({ p }) {
-  const [f, setF] = useState({ name: '', email: '', message: '' });
+  const [f, setF] = useState({ name: '', email: '', message: '', website: '' });
+  const [ok, setOk] = useState(false);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const send = async (e) => {
     e.preventDefault();
     setMsg('');
     setBusy(true);
-    try { await api('/messages', { method: 'POST', body: f }); setF({ name: '', email: '', message: '' }); setMsg('Message sent. I will get back to you soon.'); }
-    catch (x) { setMsg(x.message); }
+    try { await api('/messages', { method: 'POST', body: f }); setF({ name: '', email: '', message: '', website: '' }); setOk(true); setMsg('Message sent. I will get back to you soon.'); }
+    catch (x) { setOk(false); setMsg(x.message); }
     setBusy(false);
   };
   const rows = [
@@ -224,16 +231,15 @@ function Contact({ p }) {
     ['linkedin', 'LinkedIn', p.linkedin && 'Connect with me', p.linkedin],
     ['github', 'GitHub', p.github && 'See my code', p.github],
   ].filter((r) => r[2]);
-  const ico = 'pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-gold';
   return (
     <Section id="contact" title="Get in touch" tone="dark" sub="The road continues. Tell me about your next stop and I will reply soon.">
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <Reveal className={`${darkCard} grid content-start gap-5 p-6 sm:p-8`}>
           {rows.map(([icon, label, value, href]) => {
             const body = (
               <>
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold/15 text-gold transition group-hover:bg-gold group-hover:text-ink"><Icon name={icon} /></span>
-                <span className="min-w-0"><span className="block text-sm text-white/60">{label}</span><span className="block break-words font-semibold sm:text-lg">{value}</span></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm text-white/60">{label}</span><span className="block text-[15px] font-semibold [overflow-wrap:anywhere] sm:text-lg">{value}</span></span>
               </>
             );
             const cls = 'group flex items-center gap-4';
@@ -243,13 +249,21 @@ function Contact({ p }) {
           })}
         </Reveal>
         <Reveal className={`${darkCard} p-6 sm:p-8`}>
-          <form className="aform dark-form" onSubmit={send}>
-            <label>Name<span className="relative"><Icon name="user" className={ico} /><input className="pl-11" required placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span></label>
-            <label>Email<span className="relative"><Icon name="mail" className={ico} /><input className="pl-11" type="email" required placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span></label>
-            <label>Message<span className="relative"><Icon name="message" className={ico} /><textarea className="pl-11" rows="5" required placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span></label>
+          <form className="aform dark-form" onSubmit={send} noValidate={false}>
+            <label>Name
+              <span className="field"><Icon name="user" className="field-icon" /><input name="name" autoComplete="name" required maxLength={100} placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span>
+            </label>
+            <label>Email
+              <span className="field"><Icon name="mail" className="field-icon" /><input name="email" autoComplete="email" type="email" required maxLength={150} placeholder="you@example.com" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></span>
+            </label>
+            <label>Message
+              <span className="field field-area"><Icon name="message" className="field-icon" /><textarea name="message" rows="5" required maxLength={5000} placeholder="How can I help?" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></span>
+            </label>
+            {/* honeypot: hidden from people, bots fill it in */}
+            <input className="hidden" tabIndex={-1} autoComplete="off" aria-hidden name="website" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
             <div className="row">
               <button className="btn gold inline-flex items-center gap-2" disabled={busy}><Icon name="send" className="h-4 w-4" />{busy ? 'Sending...' : 'Send message'}</button>
-              <span role="status" className="text-sm text-white/80">{msg}</span>
+              <span role="status" aria-live="polite" className={`text-sm ${ok ? 'text-emerald-300' : 'text-red-300'}`}>{msg}</span>
             </div>
           </form>
         </Reveal>

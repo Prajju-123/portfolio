@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import auth from '../middleware/auth.js';
+import { sendContactMail } from '../utils/mailer.js';
 import { Admin, Profile, Milestone, Skill, Project, Certification, Message } from '../models/index.js';
 
 const r = Router();
@@ -27,10 +28,30 @@ r.put('/profile', auth, async (req, res) =>
   res.json(await Profile.findOneAndUpdate({}, req.body, { upsert: true, new: true, setDefaultsOnInsert: true })));
 
 // ---- Contact messages ----
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const hits = new Map(); // tiny in-memory rate limit: 5 messages / 10 min per IP
 r.post('/messages', async (req, res) => {
-  const { name, email, message } = req.body;
+  const ip = req.ip;
+  const now = Date.now();
+  const recent = (hits.get(ip) || []).filter((t) => now - t < 10 * 60 * 1000);
+  if (recent.length >= 5) return res.status(429).json({ message: 'Too many messages. Please try again in a few minutes.' });
+
+  const name = String(req.body.name || '').trim();
+  const email = String(req.body.email || '').trim();
+  const message = String(req.body.message || '').trim();
+  if (req.body.website) return res.status(201).json({ ok: true }); // honeypot: bots fill this hidden field
   if (!name || !email || !message) return res.status(400).json({ message: 'Please fill every field' });
-  await Message.create({ name, email, message });
+  if (!EMAIL_RE.test(email)) return res.status(400).json({ message: 'Please enter a valid email address' });
+  if (name.length > 100 || email.length > 150 || message.length > 5000) return res.status(400).json({ message: 'Your message is too long' });
+
+  hits.set(ip, [...recent, now]);
+  await Message.create({ name, email, message }).catch((e) => console.error('Could not save message', e.message)); // backup copy for the admin panel
+  try {
+    await sendContactMail({ name, email, message });
+  } catch (e) {
+    console.error('Mail error:', e.message);
+    return res.status(502).json({ message: 'Could not send your message right now. Please email me directly.' });
+  }
   res.status(201).json({ ok: true });
 });
 r.get('/messages', auth, async (_req, res) => res.json(await Message.find().sort('-createdAt')));

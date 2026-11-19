@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  html, body { overflow-x: clip; }
+  img, svg { max-width: 100%; }
   body { @apply bg-paper font-body text-base leading-relaxed text-ink antialiased; }
   h1, h2, h3 { @apply font-display leading-tight; }
   :focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
@@ -35,4 +37,41 @@
   .alist li { @apply flex flex-wrap items-center justify-between gap-3 border-t border-black/10 py-3; }
   .alist .btn { @apply px-3.5 py-1.5; }
   .msgs li { @apply items-start; }
+}
+
+/* ---------- Hero: identical design on mobile, tablet, laptop and desktop ---------- */
+.hero-grid {
+  display: grid; align-content: center; align-items: center; column-gap: clamp(1rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "hello photo" "role photo" "name name" "tag tag" "cta cta";
+}
+.hero-hello { grid-area: hello; align-self: end; }
+.hero-photo { grid-area: photo; justify-self: end; }
+.hero-name { grid-area: name; margin-top: 1.25rem; font-size: clamp(2.35rem, 11.5vw, 5.5rem); line-height: 1.05; }
+.hero-role { grid-area: role; align-self: start; margin-top: .5rem; min-height: 2.75rem; font-size: clamp(1.05rem, 4.6vw, 1.9rem); }
+.hero-tag { grid-area: tag; margin-top: .75rem; }
+.hero-cta { grid-area: cta; margin-top: 1.75rem; }
+@media (min-width: 768px) { .hero-name { font-size: clamp(3.5rem, 8vw, 5.5rem); } }
+@media (min-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1.35fr 1fr; grid-template-rows: auto auto auto auto auto;
+    grid-template-areas: "hello photo" "name photo" "role photo" "tag photo" "cta photo";
+  }
+  .hero-hello { align-self: auto; }
+  .hero-photo { grid-row: 1 / -1; justify-self: center; }
+  .hero-name { margin-top: .5rem; font-size: clamp(4rem, 6.6vw, 6rem); }
+  .hero-role { align-self: auto; margin-top: .75rem; min-height: 3rem; font-size: 1.875rem; }
+  .hero-cta { margin-top: 2rem; }
+}
+@media (max-width: 380px) { .hero-cta .btn { padding: .6rem 1rem; font-size: .8rem; } }
+
+/* ---------- Contact form: icon on the left, text and placeholder start after it ---------- */
+@layer components {
+  .aform .field { @apply relative block; }
+  .field-icon { @apply pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold; }
+  .field-area .field-icon { @apply top-[1.05rem] translate-y-0; }
+  .aform .field input, .aform .field textarea { @apply py-3 pl-12 pr-4; }
+  .aform .field textarea { @apply min-h-[8rem] resize-y; }
+  .aform .field input:focus, .aform .field textarea:focus { @apply border-gold outline-none ring-2 ring-gold/40; }
+  .aform .row .btn { @apply w-full justify-center sm:w-auto; }
 }
