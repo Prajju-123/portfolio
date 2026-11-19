@@ -172,6 +172,41 @@
   grid-area: cta;
   margin-top: 1.25rem;
 }
+/* PHONES (< 640px): small name directly under the job title, beside the photo, with tight spacing.
+   Name size = (screen width - side gutters - photo - gap) / ~10.2, so it always fits on one line. */
+@media (max-width: 639px) {
+  .hero-grid {
+    grid-template-rows: 1fr auto auto auto 1fr auto auto;
+    grid-template-areas: ". photo" "hello photo" "role photo" "name photo" ". photo" "tag tag" "cta cta";
+  }
+  .hero-hello {
+    align-self: auto;
+    line-height: 1.2;
+  }
+  .hero-role {
+    margin-top: 0.15rem;
+    min-height: 1.9rem;
+    font-size: clamp(0.9rem, 3.8vw, 1.15rem);
+    line-height: 1.25;
+  }
+  .hero-name {
+    margin-top: 0.1rem;
+    line-height: 1.1;
+    font-size: min(
+      calc(
+        (100vw - 2.5rem - clamp(7rem, 30vw, 20rem) - clamp(1rem, 4vw, 3rem)) /
+          10.2
+      ),
+      2rem
+    );
+  }
+  .hero-tag {
+    margin-top: 0.85rem;
+  }
+  .hero-cta {
+    margin-top: 1rem;
+  }
+}
 @media (min-width: 1024px) {
   .hero-grid {
     grid-template-columns: 1.35fr 1fr;
