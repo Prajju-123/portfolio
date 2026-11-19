@@ -7,7 +7,7 @@ import { ToastProvider } from './components/Toast.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <MotionConfig reducedMotion="user">
       <ToastProvider>
         <App />
