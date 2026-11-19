@@ -116,7 +116,7 @@ await Milestone.insertMany([
   {
     order: 6,
     kind: "work",
-    title: "Frontend Developer",
+    title: "Software Developer",
     org: "Kaapicat Beverages Private Limited",
     place: "Bengaluru",
     from: "September 2024",
