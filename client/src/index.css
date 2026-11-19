@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  /* position:relative on <html> stops framer-motion's "non-static container" warning */
+  html { position: relative; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; font-size: 15px; }
+  /* Text scale: phones a little smaller, tablets a little bigger, laptops/desktops unchanged (16px) */
+  @media (min-width: 640px) { html { font-size: 17px; } }
+  @media (min-width: 1024px) { html { font-size: 16px; } }
   html, body { overflow-x: clip; }
   img, svg { max-width: 100%; }
   body { @apply bg-paper font-body text-base leading-relaxed text-ink antialiased; }
@@ -47,10 +51,10 @@
 }
 .hero-hello { grid-area: hello; align-self: end; }
 .hero-photo { grid-area: photo; justify-self: end; }
-.hero-name { grid-area: name; margin-top: 1.25rem; font-size: clamp(2.35rem, 11.5vw, 5.5rem); line-height: 1.05; }
+.hero-name { grid-area: name; margin-top: .75rem; font-size: clamp(2.35rem, 11.5vw, 5.5rem); line-height: 1.05; }
 .hero-role { grid-area: role; align-self: start; margin-top: .5rem; min-height: 2.75rem; font-size: clamp(1.05rem, 4.6vw, 1.9rem); }
 .hero-tag { grid-area: tag; margin-top: .75rem; }
-.hero-cta { grid-area: cta; margin-top: 1.75rem; }
+.hero-cta { grid-area: cta; margin-top: 1.25rem; }
 @media (min-width: 768px) { .hero-name { font-size: clamp(3.5rem, 8vw, 5.5rem); } }
 @media (min-width: 1024px) {
   .hero-grid {

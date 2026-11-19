@@ -19,36 +19,37 @@ const Reveal = ({ children, className = '', x = 0 }) => (
 // tone: light (white), mist (soft gray), dark (black band)
 const TONES = { light: 'bg-paper text-ink', mist: 'bg-mist text-ink', dark: 'bg-ink text-white on-dark' };
 const Section = ({ id, title, sub, tone = 'light', children }) => (
-  <section id={id} className={`${TONES[tone]} scroll-mt-14 overflow-x-clip`}>
-    <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 md:py-28">
-      <h2 className="text-4xl font-extrabold sm:text-5xl md:text-6xl">{title}<span className="text-gold">.</span></h2>
-      {sub && <p className={`mt-4 max-w-xl ${tone === 'dark' ? 'text-white/70' : 'text-gray-600'}`}>{sub}</p>}
+  <section id={id} className={`${TONES[tone]} scroll-mt-12 overflow-x-clip`}>
+    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
+      <h2 className="text-3xl font-extrabold sm:text-5xl md:text-5xl lg:text-6xl">{title}<span className="text-gold">.</span></h2>
+      {sub && <p className={`mt-3 max-w-xl ${tone === 'dark' ? 'text-white/70' : 'text-gray-600'}`}>{sub}</p>}
       {children}
     </div>
   </section>
 );
 
-function Nav({ name }) {
+function Nav() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
   const [open, setOpen] = useState(false);
   const links = [['journey', 'Journey'], ['toolkit', 'Toolkit'], ['work', 'Projects'], ['contact', 'Contact']];
   return (
-    <nav className="fixed inset-x-0 top-0 z-30 border-b border-black/10 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
-        <a href="#top" className="font-display text-xl font-extrabold">{name?.split(' ')[0]}<span className="text-gold">.</span></a>
-        <div className="hidden gap-8 md:flex">
+    <nav className="fixed inset-x-0 top-0 z-30 border-b border-black/10 bg-white/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-12 max-w-6xl items-center px-4 sm:px-8 md:justify-center">
+        <div className="hidden gap-10 md:flex">
           {links.map(([id, l]) => <a key={id} href={`#${id}`} className="text-sm font-medium text-gray-600 transition hover:text-ink">{l}</a>)}
         </div>
-        <button className="rounded-full border border-black/25 px-4 py-1.5 text-sm md:hidden" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Close' : 'Menu'}
+        <button type="button" className="-ml-1 grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-black/5 md:hidden" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6" aria-hidden>
+            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
         </button>
       </div>
       <AnimatePresence>
         {open && (
           <motion.div className="overflow-hidden md:hidden" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-            <div className="flex flex-col px-5 pb-4">
-              {links.map(([id, l]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} className="border-t border-black/10 py-3">{l}</a>)}
+            <div className="flex flex-col px-5 pb-2">
+              {links.map(([id, l]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} className="border-t border-black/10 py-3 text-sm font-medium">{l}</a>)}
             </div>
           </motion.div>
         )}
@@ -66,7 +67,7 @@ function Hero({ p }) {
     <header id="top" className="relative overflow-hidden bg-gradient-to-b from-white to-stone-100">
       <div className="pointer-events-none absolute -right-24 top-24 h-96 w-96 rounded-full bg-amber-200/50 blur-[110px]" aria-hidden />
       {/* Same design on every screen: text on the left, photo on the right. Areas are defined in index.css (.hero-grid). */}
-      <div className="hero-grid relative mx-auto min-h-screen max-w-6xl px-5 pb-20 pt-24 sm:px-8 sm:pt-28">
+      <div className="hero-grid relative mx-auto max-w-6xl px-5 pb-10 pt-20 sm:px-8 sm:pb-14 sm:pt-24 lg:min-h-screen lg:pb-20">
         <motion.p className="hero-hello font-semibold text-amber-600" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>Hello, I'm</motion.p>
 
         <h1 aria-label={p.name} className="hero-name font-extrabold">
@@ -101,7 +102,7 @@ function Hero({ p }) {
           </div>
         </motion.div>
 
-        <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 md:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+        <motion.p className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 lg:block" animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
           Scroll and the road starts here
         </motion.p>
       </div>
@@ -113,8 +114,8 @@ function About({ p }) {
   const facts = [['Based in', p.location && [p.location]], ['Speaks', p.languages], ['Strengths', p.softSkills], ['Off the clock', p.hobbies]].filter(([, v]) => v?.length);
   return (
     <section className="overflow-x-clip bg-stone-100">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 pb-20 sm:px-8 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12">
-        <Reveal><p className="text-xl leading-relaxed text-gray-800 sm:text-2xl">{p.summary}</p></Reveal>
+      <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-10 sm:px-8 sm:pb-14 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12 lg:pb-16">
+        <Reveal><p className="text-lg leading-relaxed text-gray-800 sm:text-xl lg:text-2xl">{p.summary}</p></Reveal>
         <Reveal className={`${card} grid gap-3 p-6`}>
           {facts.map(([k, v]) => <p key={k}><b className="mr-2 text-amber-600">{k}</b><span className="text-gray-700">{v.join(', ')}</span></p>)}
         </Reveal>
@@ -130,7 +131,7 @@ function Journey({ items }) {
   const top = useTransform(fill, (v) => `${v * 100}%`);
   return (
     <Section id="journey" title="The journey so far" sub="From a school in Kundapura to enterprise apps in Bengaluru. Keep scrolling to follow the road.">
-      <div className="relative mt-14" ref={ref}>
+      <div className="relative mt-8 sm:mt-12" ref={ref}>
         <div className="absolute inset-y-0 left-[18px] w-1 -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,.22)_0_14px,transparent_14px_28px)] md:left-1/2" />
         <motion.div className="absolute inset-y-0 left-[18px] w-1 origin-top -translate-x-1/2 rounded bg-gold md:left-1/2" style={{ scaleY: fill }} />
         <motion.div className="absolute left-[18px] z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-gold shadow-[0_0_0_6px_rgba(245,158,11,.3)] md:left-1/2" style={{ top }} />
@@ -138,7 +139,7 @@ function Journey({ items }) {
           const left = i % 2 === 0;
           const work = m.kind === 'work';
           return (
-            <Reveal key={m._id} x={left ? -50 : 50} className={`relative mb-12 w-full pl-12 md:w-1/2 md:px-12 ${left ? 'md:text-right' : 'md:ml-[50%]'}`}>
+            <Reveal key={m._id} x={left ? -50 : 50} className={`relative mb-7 w-full pl-12 sm:mb-10 md:w-1/2 md:px-12 ${left ? 'md:text-right' : 'md:ml-[50%]'}`}>
               <span className={`absolute left-[10px] top-6 h-4 w-4 rounded-full ${left ? 'md:left-auto md:-right-2' : 'md:-left-2'} ${work ? 'bg-ink shadow-[0_0_0_6px_rgba(17,17,17,.12)]' : 'bg-gold shadow-[0_0_0_6px_rgba(245,158,11,.25)]'}`} />
               <div className={`${card} p-5 text-left sm:p-6 ${left ? 'md:text-right' : ''}`}>
                 <small className="font-medium text-gray-500">{m.from}{m.to && ` to ${m.to}`}</small>
@@ -158,7 +159,7 @@ function Journey({ items }) {
 
 const Skills = ({ items }) => (
   <Section id="toolkit" title="What I carry with me" tone="dark">
-    <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((g) => (
         <Reveal key={g._id} className={`${darkCard} p-6`}>
           <h3 className="mb-4 text-xl font-bold text-gold">{g.category}</h3>
@@ -173,9 +174,9 @@ const Skills = ({ items }) => (
 
 const Projects = ({ items, certs }) => (
   <Section id="work" title="Things I've built" tone="mist">
-    <div className="mt-10">
+    <div className="mt-6 sm:mt-8">
       {items.map((p) => (
-        <Reveal key={p._id} className="grid gap-3 border-t border-black/10 py-7 md:grid-cols-[1fr_2fr] md:gap-10">
+        <Reveal key={p._id} className="grid gap-2 border-t border-black/10 py-5 sm:py-6 md:grid-cols-[1fr_2fr] md:gap-10">
           <div><h3 className="text-2xl font-bold">{p.title}</h3><p className="text-amber-600">{p.role}</p></div>
           <div>
             <p className="text-gray-700">{p.description}</p>
@@ -189,7 +190,7 @@ const Projects = ({ items, certs }) => (
       ))}
     </div>
     {!!certs.length && (
-      <Reveal className={`${card} mt-12 p-6`}>
+      <Reveal className={`${card} mt-8 p-5 sm:mt-10 sm:p-6`}>
         <h3 className="mb-3 text-2xl font-bold">Certifications</h3>
         <ul className="list-disc space-y-1 pl-5 marker:text-gold">{certs.map((c) => <li key={c._id}>{c.link ? <a className="underline decoration-gold decoration-2 underline-offset-4" href={c.link} target="_blank" rel="noreferrer">{c.title}</a> : c.title}, <span className="text-gray-600">{c.issuer}</span></li>)}</ul>
       </Reveal>
@@ -243,22 +244,22 @@ function Contact({ p }) {
   ].filter((r) => r[2]);
   return (
     <Section id="contact" title="Get in touch" tone="dark" sub="The road continues. Tell me about your next stop and I will reply soon.">
-      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <Reveal className={`${darkCard} grid content-start gap-5 p-6 sm:p-8`}>
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <Reveal className={`${darkCard} grid content-start gap-4 p-5 sm:gap-5 sm:p-8`}>
           {rows.map(([icon, label, value, href]) => {
             const body = (
               <>
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold/15 text-gold transition group-hover:bg-gold group-hover:text-ink"><Icon name={icon} /></span>
-                <span className="min-w-0 flex-1"><span className="block text-sm text-white/60">{label}</span><span className="block text-[15px] font-semibold [overflow-wrap:anywhere] sm:text-lg">{value}</span></span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl sm:h-12 sm:w-12 bg-gold/15 text-gold transition group-hover:bg-gold group-hover:text-ink"><Icon name={icon} /></span>
+                <span className="min-w-0 flex-1"><span className="block text-sm text-white/60">{label}</span><span className="block text-[0.85rem] font-semibold [overflow-wrap:anywhere] min-[400px]:text-[0.95rem] sm:text-lg">{value}</span></span>
               </>
             );
-            const cls = 'group flex items-center gap-4';
+            const cls = 'group flex items-center gap-3 sm:gap-4';
             return href
               ? <a key={label} className={cls} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">{body}</a>
               : <div key={label} className={cls}>{body}</div>;
           })}
         </Reveal>
-        <Reveal className={`${darkCard} p-6 sm:p-8`}>
+        <Reveal className={`${darkCard} p-5 sm:p-8`}>
           <form className="aform dark-form" onSubmit={send} noValidate>
             <label>Name
               <span className="field"><Icon name="user" className="field-icon" /><input name="name" autoComplete="name" maxLength={100} placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></span>
@@ -290,14 +291,13 @@ export default function Home() {
   if (!d) return <p className="grid min-h-screen place-items-center">Loading the journey...</p>;
   return (
     <>
-      <Nav name={d.profile.name} />
+      <Nav />
       <Hero p={d.profile} />
       <About p={d.profile} />
       <Journey items={d.milestones} />
       <Skills items={d.skills} />
       <Projects items={d.projects} certs={d.certifications} />
       <Contact p={d.profile} />
-      <footer className="bg-ink px-5 pb-12 text-center text-sm text-white/50">{d.profile.name} <a href="/admin/login" className="ml-2 underline underline-offset-4">Admin</a></footer>
     </>
   );
 }
