@@ -19,7 +19,7 @@ const Reveal = ({ children, className = "", x = 0 }) => (
     className={className}
     initial={{ opacity: 0, y: 36, x }}
     whileInView={{ opacity: 1, y: 0, x: 0 }}
-    viewport={{ once: true, margin: "-70px" }}
+    viewport={{ once: false, amount: 0.15, margin: "0px 0px -60px 0px" }}
     transition={{ duration: 0.7, ease: "easeOut" }}
   >
     {children}
@@ -209,35 +209,14 @@ function Hero({ p }) {
         <motion.p
           className="hero-hello font-semibold text-amber-600"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false, amount: 0.3 }}
           transition={{ delay: 0.1 }}
         >
           Hello, I'm
         </motion.p>
 
-        <h1 aria-label={p.name} className="hero-name font-extrabold">
-          {(p.name || "").split(" ").map((w, wi) => (
-            <span
-              key={wi}
-              className="mr-[0.25em] inline-block overflow-hidden whitespace-nowrap align-bottom"
-            >
-              {[...w].map((c, k) => (
-                <motion.span
-                  key={k}
-                  className="inline-block"
-                  initial={{ y: "100%", opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{
-                    delay: 0.3 + (wi * 8 + k) * 0.045,
-                    duration: 0.6,
-                  }}
-                >
-                  {c}
-                </motion.span>
-              ))}
-            </span>
-          ))}
-        </h1>
+        <h1 className="hero-name font-extrabold">{p.name}</h1>
 
         <div className="hero-role font-display font-bold text-gray-500">
           <AnimatePresence mode="wait">
@@ -277,12 +256,7 @@ function Hero({ p }) {
           )}
         </div>
 
-        <motion.div
-          className="hero-photo"
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 90 }}
-        >
+        <div className="hero-photo">
           <div className="relative">
             <motion.div
               className="absolute -inset-1.5 rounded-full bg-[conic-gradient(from_0deg,#f59e0b,#111111,#9ca3af,#f59e0b)] sm:-inset-3"
@@ -303,15 +277,7 @@ function Hero({ p }) {
               )}
             </div>
           </div>
-        </motion.div>
-
-        <motion.p
-          className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-sm text-gray-500 lg:block"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.8 }}
-        >
-          Scroll and the road starts here
-        </motion.p>
+        </div>
       </div>
     </header>
   );
