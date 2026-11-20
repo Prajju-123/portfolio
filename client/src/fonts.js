@@ -27,6 +27,7 @@ export const FONTS = [
 ];
 
 const KEY = 'site_font';
+let applied = null; // font name currently applied to the page
 
 const gfont = (family, weights) => {
   const id = 'dyn-font-' + family;
@@ -48,7 +49,10 @@ export function applyFont(name) {
   root.style.setProperty('--font-display', stack);
   root.style.setProperty('--font-body', stack);
   try { localStorage.setItem(KEY, f.name); } catch { /* ignore */ }
-  window.dispatchEvent(new CustomEvent('fontchange', { detail: f.name }));
+  if (f.name !== applied) { // the 10-second background sync calls this too: only announce real changes
+    applied = f.name;
+    window.dispatchEvent(new CustomEvent('fontchange', { detail: f.name }));
+  }
   return f.name;
 }
 

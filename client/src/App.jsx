@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import Login from './pages/admin/Login.jsx';
 import ForgotPassword from './pages/admin/ForgotPassword.jsx';
-import Dashboard from './pages/admin/Dashboard.jsx';
+import Dashboard, { ADMIN_SLUGS } from './pages/admin/Dashboard.jsx';
 import { api, getToken } from './api.js';
 import { applyFont, applySavedFont } from './fonts.js';
 import { applyTheme, applySavedTheme } from './theme.js';
@@ -51,8 +51,12 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-      <Route path="/admin" element={<Private><Dashboard /></Private>} />
-      <Route path="/admin/settings" element={<Private><Dashboard /></Private>} />
+      <Route path="/admin" element={<Navigate to="/admin/profile" replace />} />
+      {Object.values(ADMIN_SLUGS).map((slug) => (
+        <Route key={slug} path={`/admin/${slug}`} element={<Private><Dashboard /></Private>} />
+      ))}
+      <Route path="/admin/journey-steps" element={<Navigate to="/admin/journey-stops" replace />} />
+      <Route path="/admin/*" element={<Navigate to="/admin/profile" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );

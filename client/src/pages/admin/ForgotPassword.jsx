@@ -11,13 +11,13 @@ const Eye = ({ off }) => off
   : <Svg><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Svg>;
 const LOCK = <><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></>;
 
-function Password({ value, onChange, placeholder, auto }) {
+function Password({ value, onChange, placeholder, auto, name }) {
   const [show, setShow] = useState(false);
   return (
     <label className="field">
       <span className="sr-only">{placeholder}</span>
       <Svg className="field-icon">{LOCK}</Svg>
-      <input type={show ? 'text' : 'password'} required minLength={8} placeholder={placeholder} autoComplete={auto} className="!pr-12" value={value} onChange={onChange} />
+      <input type={show ? 'text' : 'password'} name={name} id={name} required minLength={8} placeholder={placeholder} autoComplete={auto} className="!pr-12" value={value} onChange={onChange} />
       <button type="button" className="login-eye" onClick={() => setShow((v) => !v)} aria-label={show ? 'Hide password' : 'Show password'}>
         <Eye off={show} />
       </button>
@@ -79,7 +79,7 @@ export default function ForgotPassword() {
             <label className="field">
               <span className="sr-only">Username</span>
               <Svg className="field-icon"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></Svg>
-              <input type="text" required placeholder="Username" autoComplete="username" autoCapitalize="none" value={f.username} onChange={set('username')} />
+              <input type="text" name="username" id="fp-username" required placeholder="Username" autoComplete="username" autoCapitalize="none" value={f.username} onChange={set('username')} />
             </label>
             <button className="btn gold login-submit" disabled={busy}>{busy ? 'Sending...' : 'Send code'}</button>
           </>
@@ -88,10 +88,10 @@ export default function ForgotPassword() {
             <label className="field">
               <span className="sr-only">Verification code</span>
               <Svg className="field-icon">{LOCK}</Svg>
-              <input type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="6-digit code" autoComplete="one-time-code" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.replace(/\D/g, '') })} />
+              <input type="text" name="code" id="fp-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="6-digit code" autoComplete="one-time-code" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.replace(/\D/g, '') })} />
             </label>
-            <Password value={f.password} onChange={set('password')} placeholder="New password" auto="new-password" />
-            <Password value={f.confirm} onChange={set('confirm')} placeholder="Confirm password" auto="new-password" />
+            <Password value={f.password} onChange={set('password')} placeholder="New password" auto="new-password" name="newPassword" />
+            <Password value={f.confirm} onChange={set('confirm')} placeholder="Confirm password" auto="new-password" name="confirmPassword" />
             <button className="btn gold login-submit" disabled={busy}>{busy ? 'Submitting...' : 'Submit'}</button>
             <button type="button" className="login-back" onClick={sendCode} disabled={busy}>Resend code</button>
           </>

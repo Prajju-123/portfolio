@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import App from './App.jsx';
 import { ToastProvider } from './components/Toast.jsx';
+import './i18n.js';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -22,7 +22,7 @@ export default function Login() {
       const { token } = await api('/auth/login', { method: 'POST', body: f });
       setToken(token, remember);
       toast.success('Welcome back.', 'Logged in');
-      nav('/admin');
+      nav('/admin/profile');
     } catch (x) {
       toast.error(x.message, 'Login failed');
     } finally {
@@ -61,7 +61,7 @@ export default function Login() {
 
         <div className="login-opts">
           <label className="login-remember">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            <input type="checkbox" name="remember" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
             <span>Remember me</span>
           </label>
           <Link to="/forgot-password">Forgot password?</Link>

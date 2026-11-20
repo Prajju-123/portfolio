@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { api, setToken } from '../../api.js';
 import { useToast } from '../../components/Toast.jsx';
 import { DEFAULT_FONT, FONTS, applyFont, savedFont } from '../../fonts.js';
+import SearchSelect from '../../components/SearchSelect.jsx';
 import { applyTheme, savedTheme } from '../../theme.js';
 
 // Each entry: [fieldName, type, options]. Types: text (default), textarea, list (one per line), number, select
@@ -35,39 +36,83 @@ const shrink = (file, max = 1100) => new Promise((res, rej) => {
   img.src = URL.createObjectURL(file);
 });
 
+// Textarea that is exactly as tall as its text (no scrollbar inside the box); it grows and shrinks while you type.
+function AutoArea(props) {
+  const ref = useRef(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + 2}px`; // +2 = the border
+  };
+  useEffect(fit, [props.value]);
+  useEffect(() => {
+    window.addEventListener('resize', fit);
+    const t = setTimeout(fit, 60); // once more after the pop-up has finished laying out
+    return () => { window.removeEventListener('resize', fit); clearTimeout(t); };
+  }, []);
+  return <textarea ref={ref} rows={1} className="autoarea" {...props} />;
+}
+
+// Profile fields the browser may autofill; every other admin field switches autofill off
+const AUTOFILL = { name: 'name', email: 'email', phone: 'tel', location: 'address-level2' };
+
+// Opens a stored data: URL (such as the CV) in a new tab. Browsers block data: links, so it goes through a Blob.
+function openDataUrl(e, url) {
+  e.preventDefault();
+  e.stopPropagation();
+  try {
+    const [head, body] = url.split(',');
+    const mime = head.match(/:(.*?);/)?.[1] || 'application/octet-stream';
+    const bytes = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+    window.open(URL.createObjectURL(new Blob([bytes], { type: mime })), '_blank', 'noopener');
+  } catch { /* not a valid file */ }
+}
+
 function Field({ f: [k, type = 'text', opts], v, set, cvName }) {
+  const [fk, setFk] = useState(0); // changing it empties the native file input
+  // Clear = set the stored value(s) to null; press Save to apply, like every other change on this page
+  const clearFile = (keys) => { keys.forEach((x) => set(x, null)); setFk((n) => n + 1); };
   const val = type === 'list' ? (v || []).join('\n') : v ?? '';
   const wide = ['textarea', 'list', 'image', 'pdf'].includes(type) ? 'sm:col-span-2' : '';
   if (type === 'image') return (
     <label className={wide}>
-      {k}
-      <input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files[0]; if (f) set(k, await shrink(f)); }} />
-      {v && <img src={v} alt="Current photo" className="mt-1 h-24 w-24 rounded-full border border-black/10 object-cover" />}
-      <small>Pick an image. It is resized and saved in the database. Click Save to apply.</small>
+      <span className="adm-fieldhead">{k}</span>
+      <span className="adm-filerow">
+        <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="image/*" onChange={async (e) => { const f = e.target.files[0]; if (f) set(k, await shrink(f)); }} />
+        {v && <button type="button" className="btn adm-btn-sm" onClick={() => clearFile([k])}>Clear</button>}
+      </span>
+      {v && <img src={v} alt="Current photo" className="mt-1 h-28 w-28 rounded-full border border-black/10 bg-white object-contain" />}
     </label>
   );
   if (type === 'pdf') return (
     <label className={wide}>
-      CV (PDF)
-      <input type="file" accept="application/pdf" onChange={async (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        if (f.size > 2.5 * 1024 * 1024) return alert('Please pick a PDF under 2.5 MB.');
-        const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
-        set(k, url);
-        set('cvName', f.name);
-      }} />
-      {v && <small className="!text-amber-700">Current file: {cvName || 'CV.pdf'}. The Download CV button shows on the site.</small>}
-      <small>Pick a PDF (max 2.5 MB), then click Save.</small>
+      <span className="adm-fieldhead">CV (PDF)<small>Max 2.5 MB</small></span>
+      <span className="adm-filerow">
+        <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="application/pdf" onChange={async (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          if (f.size > 2.5 * 1024 * 1024) return alert('Please pick a PDF under 2.5 MB.');
+          const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+          set(k, url);
+          set('cvName', f.name);
+        }} />
+        {v && <button type="button" className="btn adm-btn-sm" onClick={() => clearFile([k, 'cvName'])}>Clear</button>}
+      </span>
+      {v && (
+        <small className="adm-curfile">
+          Current file: <a href="#open" onClick={(e) => openDataUrl(e, v)}>{(cvName || 'CV').replace(/\.[^.]+$/, '')}</a>
+        </small>
+      )}
     </label>
   );
   const on = (e) => set(k, type === 'list' ? e.target.value.split('\n') : type === 'number' ? Number(e.target.value) : e.target.value);
   return (
     <label className={wide}>
       {k.replace(/([A-Z])/g, ' $1')}
-      {type === 'textarea' || type === 'list' ? <textarea rows={type === 'list' ? 4 : 3} value={val} onChange={on} />
-        : type === 'select' ? <select value={val} onChange={on}>{opts.map((o) => <option key={o}>{o}</option>)}</select>
-        : <input type={type} value={val} onChange={on} />}
+      {type === 'textarea' || type === 'list' ? <AutoArea name={k} id={`field-${k}`} autoComplete="off" value={val} onChange={on} />
+        : type === 'select' ? <select name={k} id={`field-${k}`} autoComplete="off" value={val} onChange={on}>{opts.map((o) => <option key={o}>{o}</option>)}</select>
+        : <input type={type} name={k} id={`field-${k}`} autoComplete={AUTOFILL[k] || 'off'} value={val} onChange={on} />}
       {type === 'list' && <small>One item per line</small>}
     </label>
   );
@@ -83,7 +128,9 @@ function Form({ fields, value, onSave, onCancel }) {
   };
   return (
     <form className="aform sm:grid-cols-2" onSubmit={submit}>
-      {fields.map((f) => <Field key={f[0]} f={f} v={v[f[0]]} set={set} cvName={v.cvName} />)}
+      <div className="aform-fields">
+        {fields.map((f) => <Field key={f[0]} f={f} v={v[f[0]]} set={set} cvName={v.cvName} />)}
+      </div>
       <div className="row sm:col-span-2">
         <button className="btn gold">Save</button>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancel</button>}
@@ -110,10 +157,10 @@ function Account() {
   };
   return (
     <form className="aform" onSubmit={submit} autoComplete="off">
-      <label>Username<input required minLength={3} value={a.username || ''} onChange={(e) => setA({ ...a, username: e.target.value })} /></label>
-      <label>Email<input type="email" required value={a.email || ''} onChange={(e) => setA({ ...a, email: e.target.value })} /><small>The password reset code is sent here.</small></label>
-      <label>New password<input type="password" minLength={8} autoComplete="new-password" value={f.newPassword} onChange={(e) => setF({ ...f, newPassword: e.target.value })} /><small>Leave empty to keep your password. It is stored as a secure hash.</small></label>
-      <label>Confirm password<input type="password" autoComplete="new-password" value={f.confirm} onChange={(e) => setF({ ...f, confirm: e.target.value })} /></label>
+      <label>Username<input name="username" id="acc-username" autoComplete="username" required minLength={3} value={a.username || ''} onChange={(e) => setA({ ...a, username: e.target.value })} /></label>
+      <label>Email<input type="email" name="email" id="acc-email" autoComplete="email" required value={a.email || ''} onChange={(e) => setA({ ...a, email: e.target.value })} /><small>The password reset code is sent here.</small></label>
+      <label>New password<input type="password" name="newPassword" id="acc-new" minLength={8} autoComplete="new-password" value={f.newPassword} onChange={(e) => setF({ ...f, newPassword: e.target.value })} /><small>Leave empty to keep your password. It is stored as a secure hash.</small></label>
+      <label>Confirm password<input type="password" name="confirmPassword" id="acc-confirm" autoComplete="new-password" value={f.confirm} onChange={(e) => setF({ ...f, confirm: e.target.value })} /></label>
       <div className="row"><button className="btn gold">Save</button></div>
     </form>
   );
@@ -140,16 +187,32 @@ function useEsc(fn) {
 // Centered pop-up. The body scrolls on small screens; the title bar stays visible.
 const inPanel = (node) => createPortal(node, document.getElementById('adm-modal-root') || document.body);
 
-function Modal({ title, onClose, children }) {
+function Modal({ title, onClose, children, small }) {
   useEsc(onClose);
+  const bodyRef = useRef(null);
+  // Keeps the inputs ending exactly 16px from the pop-up edge (same line as the x icon and the Save button),
+  // whatever the scrollbar width is and whether or not a scrollbar is showing.
+  useEffect(() => {
+    const el = bodyRef.current?.querySelector('.adm-scrollarea, .aform-fields');
+    if (!el) return undefined;
+    const fit = () => {
+      const bar = el.offsetWidth - el.clientWidth; // 0 when there is no scrollbar
+      el.style.paddingRight = `${Math.max(16 - 4 - bar, 0)}px`; // 4px = the gap kept right of the scroll area
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    [...el.children].forEach((ch) => ro.observe(ch));
+    return () => ro.disconnect();
+  });
   return inPanel(
     <div className="adm-modal in-panel" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="adm-modal-box adm-modal-wide">
+      <div className={`adm-modal-box adm-modal-wide ${small ? 'adm-modal-sm' : ''}`}>
         <div className="adm-modal-head">
           <h2>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5" aria-hidden><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         </div>
-        <div className="adm-modal-body">{children}</div>
+        <div className="adm-modal-body" ref={bodyRef}>{children}</div>
       </div>
     </div>
   );
@@ -263,30 +326,68 @@ const Ico = ({ name }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0" aria-hidden>{ICONS[name]}</svg>
 );
 
+// SearchSelect (shared component, left untouched) renders its helper/search inputs without a name or id.
+// This wrapper gives them one, so the browser does not report "A form field element should have an id or name attribute".
+function Named({ name, children }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const fix = () => el.querySelectorAll('input').forEach((i) => {
+      if (!i.name) i.name = `${name}-${i.readOnly ? 'helper' : 'search'}`;
+      if (!i.id) i.id = i.name;
+    });
+    fix();
+    const mo = new MutationObserver(fix);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [name]);
+  return <div ref={ref} style={{ display: 'contents' }}>{children}</div>;
+}
+
 function Settings({ theme, setTheme }) {
   const dark = theme === 'dark';
   const toast = useToast();
-  const [font, setFont] = useState(savedFont);
+  const [font, setFont] = useState(savedFont); // the font that is saved and in use (Quicksand until you save another one)
+  const [draft, setDraft] = useState(savedFont); // what is chosen in the dropdown but not saved yet
+  const [editing, setEditing] = useState(false); // the edit pop-up
+  const [busy, setBusy] = useState(false);
+  const dirty = draft !== font;
   // stays in step with changes made elsewhere (other tab, background sync)
+  const fontRef = useRef(font);
+  fontRef.current = font;
   useEffect(() => {
-    const on = (e) => setFont(e.detail);
+    // an unsaved choice (for example after "Set as default") is kept until you Save or close the pop-up
+    const on = (e) => { setDraft((d) => (d === fontRef.current ? e.detail : d)); setFont(e.detail); };
     window.addEventListener('fontchange', on);
     return () => window.removeEventListener('fontchange', on);
   }, []);
-  const pickFont = async (e) => {
-    const next = e.target.value;
+  const fontOptions = FONTS.map((f) => ({ id: f.name, label: f.name }));
+  const chooseFont = (value) => setDraft(value || DEFAULT_FONT);
+  const setDefault = () => setDraft(DEFAULT_FONT); // Quicksand; press Save to keep it
+  const save = async () => {
+    if (!dirty || busy) return;
     const prev = font;
-    setFont(next);
-    applyFont(next); // shows immediately in the admin panel
+    setBusy(true);
+    applyFont(draft); // the whole panel and website switch right away
     try {
-      await api('/profile', { method: 'PUT', body: { fontFamily: next } }); // saved for the whole website
-      toast.success(`Font changed to ${next}.`, 'Saved');
+      await api('/profile', { method: 'PUT', body: { fontFamily: draft } }); // saved for every visitor
+      setFont(draft);
+      setEditing(false);
+      toast.success(`Font changed to ${draft}.`, 'Saved');
     } catch (x) {
-      setFont(prev);
       applyFont(prev);
       toast.error(x.message, 'Could not save');
     }
+    setBusy(false);
   };
+  const closeEdit = () => { setDraft(font); setEditing(false); };
+  const FontButtons = ({ className = '' }) => (
+    <span className={`adm-fontbtns ${className}`}>
+      <button type="button" className="btn adm-btn-sm" onClick={setDefault} disabled={draft === DEFAULT_FONT}>Set as default</button>
+      <button type="button" className="btn gold adm-btn-sm" onClick={save} disabled={!dirty || busy}>{busy ? 'Saving...' : 'Save'}</button>
+    </span>
+  );
   return (
     <section>
       <h2 className="adm-set-title">Theme</h2>
@@ -308,29 +409,41 @@ function Settings({ theme, setTheme }) {
       </div>
 
       <h2 className="adm-set-title mt-6">Font</h2>
-      <div className="adm-setrow">
-        <div className="min-w-0">
+      <div className="adm-setrow flex-wrap">
+        <div className="min-w-0 flex-1">
           <b>Font family</b>
-          <small>Applies live to the whole website and this panel. Microsoft fonts show on devices that have them installed.</small>
+          <small>Applies live to the whole website and this panel.</small>
         </div>
-        <select className="adm-select" value={font} onChange={pickFont} aria-label="Font family">
-          <optgroup label="Web fonts">
-            {FONTS.filter((f) => f.group === 'web').map((f) => <option key={f.name} value={f.name}>{f.name}{f.name === DEFAULT_FONT ? ' (default)' : ''}</option>)}
-          </optgroup>
-          <optgroup label="Microsoft Office / Excel fonts">
-            {FONTS.filter((f) => f.group === 'office').map((f) => <option key={f.name} value={f.name}>{f.name}</option>)}
-          </optgroup>
-        </select>
+        <div className="adm-fontrow">
+          <div className="adm-fontpick">
+            <Named name="font-current"><SearchSelect options={fontOptions} value={font} onChange={() => {}} placeholder="Select" disabled /></Named>
+          </div>
+          <button type="button" className="adm-act" onClick={() => setEditing(true)} aria-label="Edit font" title="Edit font">{PencilIco}</button>
+        </div>
       </div>
+
+      {editing && (
+        <Modal title="Edit font" onClose={closeEdit} small>
+          <div className="adm-scrollarea">
+            <Named name="font-edit"><SearchSelect options={fontOptions} value={draft} onChange={chooseFont} placeholder="Select" /></Named>
+          </div>
+          <div className="adm-modal-end"><FontButtons /></div>
+        </Modal>
+      )}
     </section>
   );
 }
 
+// Every sidebar menu has its own page: /admin/profile, /admin/journey-stops, /admin/skills ...
+export const ADMIN_SLUGS = { profile: 'profile', milestones: 'journey-stops', skills: 'skills', projects: 'projects', certifications: 'certifications', messages: 'messages', account: 'account', settings: 'settings' };
+const KEY_OF = Object.fromEntries(Object.entries(ADMIN_SLUGS).map(([k, v]) => [v, k]));
+
 export default function Dashboard() {
   const nav = useNavigate();
   const { pathname } = useLocation();
-  const onSettings = pathname === '/admin/settings'; // the gear icon opens its own page
-  const [tab, setTab] = useState('profile');
+  const current = KEY_OF[pathname.replace(/^\/admin\/?/, '').replace(/\/$/, '')] || 'profile'; // which page the URL points at
+  const tab = current;
+  const onSettings = current === 'settings'; // the gear icon opens its own page
   const [menu, setMenu] = useState(false);
   const [dd, setDd] = useState(false); // user dropdown (Profile / Logout)
   const ddRef = useRef(null);
@@ -356,7 +469,6 @@ export default function Dashboard() {
     }
   };
   const tabs = ['profile', ...Object.keys(CFG), 'messages', 'account'];
-  const current = onSettings ? 'settings' : tab;
   const label = (t) => (t === 'profile' ? 'Profile' : t === 'messages' ? 'Messages' : t === 'account' ? 'Account' : t === 'settings' ? 'Settings' : CFG[t].label);
   const sub = { profile: 'Your name, photo and about details', messages: 'Messages from the contact form', account: 'Username, email and password for logging in', settings: 'Choose the look of your admin panel' }[current] || 'Add, edit or remove items';
   const [me, setMe] = useState(null); // name + photo for the sidebar card (refreshed whenever you switch section)
@@ -377,7 +489,7 @@ export default function Dashboard() {
     return () => { document.removeEventListener('mousedown', away); window.removeEventListener('keydown', esc); };
   }, [dd]);
   const logout = () => { setToken(null); nav('/login'); };
-  const pick = (t) => { setTab(t); setMenu(false); setDd(false); if (onSettings) nav('/admin'); panelRef.current?.scrollTo({ top: 0 }); };
+  const pick = (t) => { setMenu(false); setDd(false); if (t !== current) nav(`/admin/${ADMIN_SLUGS[t]}`); panelRef.current?.scrollTo({ top: 0 }); };
   const askExit = () => { setMenu(false); setDd(false); setConfirmExit(true); };
   const LogoutIco = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0" aria-hidden><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3" /><path d="M16 8l4 4-4 4" /><path d="M20 12H9" /></svg>;
 
@@ -412,7 +524,7 @@ export default function Dashboard() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
           <div className="adm-bar-right">
-            <button className={`adm-iconbtn ${onSettings ? 'on' : ''}`} onClick={() => { setDd(false); nav('/admin/settings'); }} aria-label="Settings" title="Settings">
+            <button className={`adm-iconbtn ${onSettings ? 'on' : ''}`} onClick={() => { setDd(false); nav(`/admin/${ADMIN_SLUGS.settings}`); }} aria-label="Settings" title="Settings">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" /></svg>
             </button>
             <div className="adm-user" ref={ddRef}>

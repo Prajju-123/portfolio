@@ -846,6 +846,7 @@ function Contact({ p }) {
                 <Icon name="message" className="field-icon" />
                 <textarea
                   name="message"
+                  autoComplete="off"
                   rows="5"
                   maxLength={5000}
                   placeholder="How can I help?"
