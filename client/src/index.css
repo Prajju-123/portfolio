@@ -781,11 +781,12 @@ textarea.autoarea { overflow: hidden; resize: none; min-height: 2.75rem; }
 /* alignment: input right edge, close (x) icon and the Save button all end on the same vertical line (16px from the box edge) */
 .adm-modal-head button { margin-right: -8px; } /* the x glyph sits ~8px inside its round button */
 
-/* file fields: label row (Max 2.5 MB on the right), input + Clear button, current file link */
-.adm-fieldhead { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
-.adm-filerow { display: flex; align-items: center; gap: 0.5rem; }
-.adm-filerow input { flex: 1 1 auto; min-width: 0; width: auto; }
-.adm-filerow .btn { flex: none; }
+/* file fields: "Label (max 2.5MB)", the input, then "Current file: name" on the left and Clear on the right */
+.adm-fieldhead { display: flex; align-items: baseline; gap: 0.35rem; }
+.adm-curfile { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.75rem; font-weight: 400; text-transform: none; color: #6b7280; }
+.adm-curfile > span { min-width: 0; overflow-wrap: anywhere; }
 .adm-curfile a { color: #b45309; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 .adm-curfile a:hover { color: #92400e; }
+.adm-curfile .btn { flex: none; }
+.adm.dark .adm-curfile { color: #a8a29e; }
 .adm.dark .adm-curfile a { color: #fcd34d; }

@@ -69,41 +69,40 @@ function openDataUrl(e, url) {
   } catch { /* not a valid file */ }
 }
 
-function Field({ f: [k, type = 'text', opts], v, set, cvName }) {
+function Field({ f: [k, type = 'text', opts], v, set, cvName, photoName }) {
   const [fk, setFk] = useState(0); // changing it empties the native file input
   // Clear = set the stored value(s) to null; press Save to apply, like every other change on this page
   const clearFile = (keys) => { keys.forEach((x) => set(x, null)); setFk((n) => n + 1); };
   const val = type === 'list' ? (v || []).join('\n') : v ?? '';
   const wide = ['textarea', 'list', 'image', 'pdf'].includes(type) ? 'sm:col-span-2' : '';
+  const curFile = (name, fallback, keys) => (
+    <span className="adm-curfile">
+      <span>
+        Current file: <a href="#open" onClick={(e) => openDataUrl(e, v)}>{(name || fallback).replace(/\.[^.]+$/, '')}</a>
+      </span>
+      <button type="button" className="btn adm-btn-sm" onClick={() => clearFile(keys)}>Clear</button>
+    </span>
+  );
   if (type === 'image') return (
     <label className={wide}>
       <span className="adm-fieldhead">{k}</span>
-      <span className="adm-filerow">
-        <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="image/*" onChange={async (e) => { const f = e.target.files[0]; if (f) set(k, await shrink(f)); }} />
-        {v && <button type="button" className="btn adm-btn-sm" onClick={() => clearFile([k])}>Clear</button>}
-      </span>
+      <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="image/*" onChange={async (e) => { const f = e.target.files[0]; if (f) { set(k, await shrink(f)); set('photoName', f.name); } }} />
+      {v && curFile(photoName, 'photo', [k, 'photoName'])}
       {v && <img src={v} alt="Current photo" className="mt-1 h-28 w-28 rounded-full border border-black/10 bg-white object-contain" />}
     </label>
   );
   if (type === 'pdf') return (
     <label className={wide}>
-      <span className="adm-fieldhead">CV (PDF)<small>Max 2.5 MB</small></span>
-      <span className="adm-filerow">
-        <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="application/pdf" onChange={async (e) => {
-          const f = e.target.files[0];
-          if (!f) return;
-          if (f.size > 2.5 * 1024 * 1024) return alert('Please pick a PDF under 2.5 MB.');
-          const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
-          set(k, url);
-          set('cvName', f.name);
-        }} />
-        {v && <button type="button" className="btn adm-btn-sm" onClick={() => clearFile([k, 'cvName'])}>Clear</button>}
-      </span>
-      {v && (
-        <small className="adm-curfile">
-          Current file: <a href="#open" onClick={(e) => openDataUrl(e, v)}>{(cvName || 'CV').replace(/\.[^.]+$/, '')}</a>
-        </small>
-      )}
+      <span className="adm-fieldhead">CV (PDF) <small>(max 2.5MB)</small></span>
+      <input key={fk} type="file" name={k} id={`field-${k}`} autoComplete="off" accept="application/pdf" onChange={async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        if (f.size > 2.5 * 1024 * 1024) return alert('Please pick a PDF under 2.5 MB.');
+        const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+        set(k, url);
+        set('cvName', f.name);
+      }} />
+      {v && curFile(cvName, 'CV', [k, 'cvName'])}
     </label>
   );
   const on = (e) => set(k, type === 'list' ? e.target.value.split('\n') : type === 'number' ? Number(e.target.value) : e.target.value);
@@ -129,7 +128,7 @@ function Form({ fields, value, onSave, onCancel }) {
   return (
     <form className="aform sm:grid-cols-2" onSubmit={submit}>
       <div className="aform-fields">
-        {fields.map((f) => <Field key={f[0]} f={f} v={v[f[0]]} set={set} cvName={v.cvName} />)}
+        {fields.map((f) => <Field key={f[0]} f={f} v={v[f[0]]} set={set} cvName={v.cvName} photoName={v.photoName} />)}
       </div>
       <div className="row sm:col-span-2">
         <button className="btn gold">Save</button>
