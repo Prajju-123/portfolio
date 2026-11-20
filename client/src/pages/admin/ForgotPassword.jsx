@@ -41,7 +41,7 @@ export default function ForgotPassword() {
       const r = await api('/auth/forgot', { method: 'POST', body: { username: f.username } });
       setSentTo(r.sentTo);
       setStep(2);
-      toast.success(`We sent a 6-digit code to ${r.sentTo}.`, 'Check your email');
+      toast.success(`Code sent to ${r.sentTo}`, 'Check your email');
     } catch (x) {
       toast.error(x.message, 'Could not send the code');
     } finally {
@@ -51,11 +51,11 @@ export default function ForgotPassword() {
 
   const reset = async (e) => {
     e.preventDefault();
-    if (f.password !== f.confirm) return toast.error('New password and confirm password do not match.', 'Passwords differ');
+    if (f.password !== f.confirm) return toast.error('Passwords do not match.', 'Passwords differ');
     setBusy(true);
     try {
       await api('/auth/reset-password', { method: 'POST', body: { username: f.username, code: f.code, password: f.password } });
-      toast.success('Your password was changed. Please log in with the new password.', 'Password changed');
+      toast.success('Please log in with your new password.', 'Password changed');
       nav('/login');
     } catch (x) {
       toast.error(x.message, 'Could not change password');

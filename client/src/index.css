@@ -165,8 +165,9 @@
   }
 
   /* ---- admin shell: black sidebar on the left, content on the right ---- */
+  /* shell: black frame (same colour as the sidebar) with the content in a rounded panel; only the panel scrolls */
   .adm {
-    @apply min-h-screen bg-stone-100 text-ink;
+    @apply h-[100dvh] overflow-hidden bg-ink text-ink;
   }
   .adm-side {
     @apply fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-ink px-4 py-6 text-white transition-transform duration-300 lg:translate-x-0;
@@ -178,7 +179,7 @@
     @apply fixed inset-0 z-30 bg-black/50 lg:hidden;
   }
   .adm-brand {
-    @apply mb-8 flex items-center gap-3 px-2;
+    @apply mb-4 flex items-center gap-3 border-b border-white/10 px-2 pb-5;
   }
   .adm-brand b {
     @apply block font-display text-lg leading-tight;
@@ -191,12 +192,17 @@
   }
   .adm-nav {
     @apply flex flex-1 flex-col gap-1 overflow-y-auto;
+    scrollbar-width: none; /* no scrollbar, still scrollable on very short screens */
+    -ms-overflow-style: none;
+  }
+  .adm-nav::-webkit-scrollbar {
+    display: none;
   }
   .adm-nav > small {
     @apply mb-1 px-3 text-[0.7rem] font-semibold uppercase tracking-widest text-white/40;
   }
   .adm-nav button {
-    @apply flex items-center gap-3 rounded-xl border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white;
+    @apply flex items-center gap-3 rounded-xl border-l-4 border-transparent px-3 py-2 text-left text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white;
   }
   .adm-nav button.on {
     @apply border-gold bg-white/10 text-gold;
@@ -211,11 +217,174 @@
   .adm-foot button {
     @apply border-gold bg-gold text-ink hover:bg-amber-400 hover:text-ink;
   }
+  .adm-nav .adm-logout {
+    @apply text-red-300 hover:bg-red-400/10 hover:text-red-200;
+  }
+  /* profile card at the bottom of the sidebar: photo in a circle + name */
+  .adm-me {
+    @apply mt-4 flex items-center gap-3 border-t border-white/10 px-2 pt-4;
+  }
+  .adm-me b {
+    @apply block truncate font-display text-sm leading-tight;
+  }
+  .adm-me small {
+    @apply block truncate text-xs text-white/50;
+  }
+  .adm-me > div {
+    @apply min-w-0;
+  }
+  .adm-me-photo {
+    @apply relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-gold bg-gradient-to-br from-amber-100 to-amber-400 font-display text-lg font-extrabold text-ink;
+  }
+  .adm-me-photo img {
+    @apply absolute max-w-none mix-blend-multiply;
+    width: 230%;
+    left: -78%;
+    top: 22%;
+  }
+  .adm-modal {
+    @apply fixed inset-0 z-[70] grid place-items-center bg-black/60 px-5 backdrop-blur-sm;
+    animation: adm-fade 0.15s ease-out;
+  }
+  .adm-modal-box {
+    @apply grid w-full max-w-sm justify-items-center gap-4 rounded-3xl border-2 border-gold bg-white p-7 text-center shadow-2xl;
+    animation: adm-pop 0.2s ease-out;
+  }
+  .adm-modal-ico {
+    @apply grid h-14 w-14 place-items-center rounded-full bg-amber-100 text-amber-600;
+  }
+  .adm-modal-box h2 {
+    @apply font-display text-xl font-bold;
+  }
+  .adm-modal-row {
+    @apply flex w-full gap-3;
+  }
+  .adm-modal-row .btn {
+    @apply flex-1 py-2.5;
+  }
+  @keyframes adm-fade {
+    from { opacity: 0; }
+  }
+  @keyframes adm-pop {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  }
+  .adm-acts {
+    @apply flex shrink-0 items-center gap-2;
+  }
+  .adm-act {
+    @apply grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-transparent text-ink transition hover:border-ink hover:bg-ink hover:text-white;
+  }
+  .adm-act.del {
+    @apply text-red-600 hover:border-red-600 hover:bg-red-600 hover:text-white;
+  }
+  .adm-modal-box.adm-modal-wide {
+    @apply flex max-h-[90dvh] max-w-2xl flex-col justify-items-stretch gap-0 overflow-hidden p-0 text-left;
+  }
+  .adm-modal-head {
+    @apply flex shrink-0 items-center justify-between gap-3 border-b border-black/10 px-5 py-4 sm:px-7;
+  }
+  .adm-modal-head h2 {
+    @apply font-display text-lg font-bold;
+  }
+  .adm-modal-head button {
+    @apply grid h-9 w-9 place-items-center rounded-full text-gray-500 transition hover:bg-black/5 hover:text-ink;
+  }
+  .adm-modal-body {
+    @apply overflow-y-auto px-5 py-5 sm:px-7 sm:py-6;
+  }
+  .adm-select {
+    @apply w-40 shrink-0 cursor-pointer rounded-xl border border-black/15 bg-white px-3 py-2 text-sm font-medium text-ink outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30 sm:w-52;
+  }
+  .adm-set-title {
+    @apply mb-2 font-display text-lg font-bold;
+  }
+  .adm-setrow {
+    @apply flex w-full items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white px-4 py-3 shadow-sm;
+  }
+  .adm-setrow b {
+    @apply block text-sm font-semibold;
+  }
+  .adm-setrow small {
+    @apply block text-xs text-gray-500;
+  }
+  /* light / dark switch: sun knob on the left = light, moon knob on the right = dark */
+  .adm-switch {
+    @apply relative block h-9 w-[4.5rem] shrink-0 rounded-full border border-black/15 bg-stone-200 p-1 transition-colors duration-300;
+  }
+  .adm-switch-knob {
+    @apply grid h-7 w-7 place-items-center rounded-full bg-gold text-ink shadow-md transition-transform duration-300 ease-out;
+  }
+  .adm-switch.on {
+    @apply border-white/20 bg-stone-700;
+  }
+  .adm-switch.on .adm-switch-knob {
+    @apply translate-x-9 bg-ink text-amber-300;
+  }
+  .adm-switch:focus-visible {
+    @apply outline-none ring-2 ring-gold ring-offset-2;
+  }
   .adm-main {
-    @apply px-4 pb-16 pt-5 sm:px-8 lg:ml-64 lg:px-10 lg:pt-8;
+    @apply flex h-full flex-col lg:ml-64;
+  }
+  /* the content lives in its own rounded container with its own scrollbar */
+  .adm-panel {
+    @apply relative min-h-0 flex-1 overflow-hidden rounded-tl-3xl bg-stone-100;
+  }
+  /* only this inner box scrolls; pop-ups are placed over the whole panel (not over the sidebar) */
+  .adm-scroll {
+    @apply h-full overflow-y-auto overscroll-contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  }
+  .adm-scroll::-webkit-scrollbar { width: 8px; }
+  .adm-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.22); border-radius: 999px; }
+  .adm-scroll::-webkit-scrollbar-track { background: transparent; margin: 14px 0; }
+  .adm-modal.in-panel {
+    @apply absolute z-30 p-4;
+  }
+  .adm-modal.in-panel .adm-modal-box {
+    @apply max-h-full;
+  }
+  .adm-content {
+    @apply p-4;
+  }
+  /* top bar: same black as the sidebar, icons on the right */
+  .adm-bar {
+    @apply flex h-14 shrink-0 items-center gap-3 px-4 sm:px-8 lg:px-8;
+  }
+  .adm-bar-right {
+    @apply ml-auto flex items-center gap-2;
+  }
+  .adm-iconbtn {
+    @apply grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-gold hover:text-gold;
+  }
+  .adm-iconbtn.on {
+    @apply border-gold bg-gold text-ink hover:text-ink;
+  }
+  .adm-user {
+    @apply relative;
+  }
+  .adm-dd {
+    @apply absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.18)];
+    animation: adm-pop 0.15s ease-out;
+  }
+  .adm-dd-head {
+    @apply mb-1 border-b border-black/10 px-3 pb-2.5 pt-2;
+  }
+  .adm-dd-head b {
+    @apply block truncate font-display text-sm;
+  }
+  .adm-dd-head small {
+    @apply block truncate text-xs text-gray-500;
+  }
+  .adm-dd button {
+    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-black/5;
+  }
+  .adm-dd button.out {
+    @apply text-red-600 hover:bg-red-50;
   }
   .adm-top {
-    @apply mx-auto mb-6 flex max-w-4xl items-center gap-3;
+    @apply mb-4 flex items-center gap-3;
   }
   .adm-top h1 {
     @apply font-display text-2xl font-bold sm:text-3xl;
@@ -228,10 +397,10 @@
     @apply mt-2 text-sm text-gray-500;
   }
   .adm-burger {
-    @apply grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-black/10 bg-white lg:hidden;
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/10 text-white lg:hidden;
   }
   .adm-card {
-    @apply mx-auto max-w-4xl rounded-3xl border border-black/10 bg-white p-5 shadow-sm sm:p-8;
+    @apply rounded-3xl border border-black/10 bg-white p-5 shadow-sm sm:p-8;
   }
   .alist {
     @apply mt-5 list-none p-0;
@@ -441,3 +610,100 @@
     @apply w-full justify-center sm:w-auto;
   }
 }
+
+/* ---------- Admin dark theme (Settings > Theme > Dark) ---------- */
+.adm.dark {
+  background: #050505;
+  color: #f5f5f4;
+}
+.adm.dark .adm-panel { background: #0c0a09; }
+.adm.dark .adm-scroll { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+.adm.dark .adm-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); }
+.adm.dark .adm-side {
+  background: #050505;
+}
+.adm.dark .adm-top h1 { color: #fff; }
+.adm.dark .adm-top p,
+.adm.dark .adm-card .text-gray-500,
+.adm.dark .aform small { color: #a8a29e; }
+.adm.dark .adm-iconbtn.on { background: #f59e0b; border-color: #f59e0b; color: #111; }
+.adm.dark .adm-dd {
+  background: #1c1917;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.adm.dark .adm-dd button { color: #f5f5f4; }
+.adm.dark .adm-dd button:hover { background: rgba(255, 255, 255, 0.08); }
+.adm.dark .adm-dd button.out { color: #fca5a5; }
+.adm.dark .adm-dd-head { border-color: rgba(255, 255, 255, 0.1); }
+.adm.dark .adm-dd-head small { color: #a8a29e; }
+.adm.dark .adm-card {
+  background: #1c1917;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+.adm.dark .aform input,
+.adm.dark .aform textarea,
+.adm.dark .aform select {
+  background: #292524;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.adm.dark .aform input::placeholder,
+.adm.dark .aform textarea::placeholder { color: #78716c; }
+.adm.dark .alist li { border-color: rgba(255, 255, 255, 0.1); }
+.adm.dark .btn:not(.gold) { border-color: #fff; color: #fff; }
+.adm.dark .btn:not(.gold):hover { background: #fff; color: #111; }
+.adm.dark .adm-modal-box { background: #1c1917; color: #fff; }
+.adm.dark .adm-modal-ico { background: rgba(245, 158, 11, 0.15); }
+.adm.dark .adm-act { border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+.adm.dark .adm-act:hover { background: #fff; color: #111; border-color: #fff; }
+.adm.dark .adm-act.del { color: #fca5a5; }
+.adm.dark .adm-act.del:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+.adm.dark .adm-modal-head { border-color: rgba(255, 255, 255, 0.1); }
+.adm.dark .adm-modal-head button { color: #a8a29e; }
+.adm.dark .adm-modal-head button:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.adm.dark .adm-setrow { background: #1c1917; border-color: rgba(255, 255, 255, 0.1); box-shadow: none; }
+.adm.dark .adm-setrow small { color: #a8a29e; }
+.adm.dark .adm-select { background: #292524; border-color: rgba(255, 255, 255, 0.15); color: #fff; }
+
+/* Font family chosen in Admin > Settings (variables are set by src/fonts.js; default = Quicksand) */
+body {
+  font-family: var(--font-body, Quicksand), system-ui, sans-serif;
+}
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display, Quicksand), system-ui, sans-serif;
+}
+
+/* ---------- Website dark theme (Admin > Settings > Light / Dark mode). <html class="dark"> ---------- */
+html.dark body { background: #0c0a09; color: #f5f5f4; }
+.dark .bg-paper { background-color: #0c0a09; }
+.dark .bg-mist,
+.dark .bg-stone-100 { background-color: #151311; }
+.dark .bg-ink { background-color: #050505; }
+.dark .bg-white { background-color: #1c1917; }
+.dark .bg-white\/85 { background-color: rgba(12, 10, 9, 0.85); }
+.dark .bg-white\/70,
+.dark .bg-stone-300\/40 { background-color: rgba(255, 255, 255, 0.04); }
+.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12); }
+.dark .bg-black\/5 { background-color: rgba(255, 255, 255, 0.08); }
+.dark .text-ink { color: #f5f5f4; }
+.dark .text-gray-500,
+.dark .text-gray-600 { color: #a8a29e; }
+.dark .text-gray-700 { color: #d6d3d1; }
+.dark .text-gray-800 { color: #e7e5e4; }
+.dark .text-amber-800 { color: #fcd34d; }
+.dark .border-black\/10 { border-color: rgba(255, 255, 255, 0.1); }
+.dark .border-white { border-color: #292524; }
+.dark .from-white {
+  --tw-gradient-from: #0c0a09 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(12 10 9 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .to-stone-100 { --tw-gradient-to: #151311 var(--tw-gradient-to-position); }
+.dark .btn:not(.gold) { border-color: #f5f5f4; color: #f5f5f4; }
+.dark .btn:not(.gold):hover { background: #f5f5f4; color: #111; }
+.dark input:not([type="checkbox"]),
+.dark textarea { color-scheme: dark; }

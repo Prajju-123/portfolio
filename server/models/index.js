@@ -19,7 +19,7 @@ export const Admin = mongoose.model('Admin', adminSchema);
 export const Profile = m('Profile', {
   name: String, title: String, tagline: String, summary: String, location: String,
   email: String, phone: String, linkedin: String, github: String, photo: String,
-  journeyIntro: String, cv: String, cvName: String, // cv = PDF stored as a data URL
+  journeyIntro: String, cv: String, cvName: String, fontFamily: String, theme: String, // cv = PDF stored as a data URL
   roles: [String], softSkills: [String], languages: [String], hobbies: [String],
 });
 

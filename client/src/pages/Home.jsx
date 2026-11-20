@@ -746,13 +746,13 @@ function Contact({ p }) {
       });
       setF({ name: "", email: "", message: "", website: "" });
       toast.success(
-        "Thanks for reaching out. I will get back to you soon.",
+        "Thanks! I will get back to you soon.",
         "Message sent",
       );
     } catch (x) {
       toast.error(
         x.message === "Failed to fetch"
-          ? "Cannot reach the server. Please try again in a moment."
+          ? "Cannot reach the server. Try again."
           : x.message,
         "Message not sent",
       );
