@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
+  useMotionValue,
   useScroll,
   useSpring,
   useTransform,
@@ -32,24 +33,69 @@ const TONES = {
   mist: "bg-mist text-ink",
   dark: "bg-ink text-white on-dark",
 };
-const Section = ({ id, title, sub, tone = "light", children }) => (
-  <section id={id} className={`${TONES[tone]} scroll-mt-12 overflow-x-clip`}>
-    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
-      <h2 className="text-[1.7rem] font-extrabold leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
-        {title}
-        <span className="text-gold">.</span>
-      </h2>
-      {sub && (
-        <p
-          className={`mt-2 max-w-xl text-sm sm:mt-3 sm:text-base ${tone === "dark" ? "text-white/70" : "text-gray-600"}`}
+// Parallax: an element drifts up/down by +-speed px while its section crosses the screen.
+function useParallax(speed = 60) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [speed, -speed]);
+  return { ref, y };
+}
+const Blob = ({ className, speed }) => {
+  const { ref, y } = useParallax(speed);
+  return (
+    <motion.div
+      ref={ref}
+      style={{ y }}
+      className={`pointer-events-none absolute rounded-full ${className}`}
+      aria-hidden
+    />
+  );
+};
+const BLOBS = {
+  light: ["bg-amber-200/40", "bg-stone-300/40"],
+  mist: ["bg-amber-200/50", "bg-white/70"],
+  dark: ["bg-amber-500/20", "bg-white/5"],
+};
+function Section({ id, title, sub, tone = "light", children }) {
+  const h = useParallax(16);
+  const [b1, b2] = BLOBS[tone];
+  return (
+    <section
+      id={id}
+      className={`${TONES[tone]} relative scroll-mt-12 overflow-clip`}
+    >
+      <Blob
+        speed={110}
+        className={`-right-24 top-8 h-56 w-56 blur-[90px] sm:h-96 sm:w-96 sm:blur-[110px] ${b1}`}
+      />
+      <Blob
+        speed={-80}
+        className={`-left-28 bottom-10 h-48 w-48 blur-[90px] sm:h-80 sm:w-80 ${b2}`}
+      />
+      <div className="relative mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
+        <motion.h2
+          ref={h.ref}
+          style={{ y: h.y }}
+          className="text-[1.7rem] font-extrabold leading-tight sm:text-4xl md:text-5xl lg:text-6xl"
         >
-          {sub}
-        </p>
-      )}
-      {children}
-    </div>
-  </section>
-);
+          {title}
+          <span className="text-gold">.</span>
+        </motion.h2>
+        {sub && (
+          <p
+            className={`mt-2 max-w-xl text-sm sm:mt-3 sm:text-base ${tone === "dark" ? "text-white/70" : "text-gray-600"}`}
+          >
+            {sub}
+          </p>
+        )}
+        {children}
+      </div>
+    </section>
+  );
+}
 
 function Nav() {
   const { scrollYProgress } = useScroll();
@@ -195,30 +241,80 @@ function Hero({ p }) {
     const t = setInterval(() => setI((n) => (n + 1) % roles.length), 2600);
     return () => clearInterval(t);
   }, [roles.length]);
+
+  // scroll parallax: every layer of the hero drifts at its own speed while the hero scrolls away
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const yHello = useTransform(scrollYProgress, [0, 1], [0, -30]);
+  const yName = useTransform(scrollYProgress, [0, 1], [0, -60]);
+  const yRole = useTransform(scrollYProgress, [0, 1], [0, -90]);
+  const yTag = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  const yCta = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const yPhoto = useTransform(scrollYProgress, [0, 1], [0, 110]);
+  const yGlowA = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const yGlowB = useTransform(scrollYProgress, [0, 1], [0, -90]);
+  const fade = useTransform(scrollYProgress, [0, 0.9], [1, 0.15]);
+
+  // mouse parallax: the photo group leans one way, the floating dots the other, which gives depth
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 70, damping: 16 });
+  const sy = useSpring(my, { stiffness: 70, damping: 16 });
+  // the photo circle leans gently with the mouse
+  const discX = useTransform(sx, [-1, 1], [10, -10]);
+  const discY = useTransform(sy, [-1, 1], [6, -6]);
+  const dotX = useTransform(sx, [-1, 1], [-28, 28]);
+  const dotY = useTransform(sy, [-1, 1], [-18, 18]);
+  const onMove = (e) => {
+    mx.set((e.clientX / window.innerWidth) * 2 - 1);
+    my.set((e.clientY / window.innerHeight) * 2 - 1);
+  };
+  const onLeave = () => {
+    mx.set(0);
+    my.set(0);
+  };
+
   return (
     <header
       id="home"
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       className="relative overflow-hidden bg-gradient-to-b from-white to-stone-100"
     >
-      <div
+      <motion.div
+        style={{ y: yGlowA }}
         className="pointer-events-none absolute -right-16 top-8 h-56 w-56 rounded-full bg-amber-200/50 blur-[90px] sm:-right-24 sm:top-24 sm:h-96 sm:w-96 sm:blur-[110px]"
+        aria-hidden
+      />
+      <motion.div
+        style={{ y: yGlowB }}
+        className="pointer-events-none absolute -left-20 bottom-10 h-48 w-48 rounded-full bg-stone-300/40 blur-[90px] sm:h-80 sm:w-80"
         aria-hidden
       />
       {/* Same design on every screen: text on the left, photo on the right. Areas are defined in index.css (.hero-grid). */}
       <div className="hero-grid relative mx-auto max-w-6xl px-5 pb-10 pt-20 sm:px-8 sm:pb-14 sm:pt-24 lg:min-h-screen lg:pb-20">
         <motion.p
+          style={{ y: yHello, opacity: fade }}
           className="hero-hello font-semibold text-amber-600"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ delay: 0.1 }}
         >
           Hello, I'm
         </motion.p>
 
-        <h1 className="hero-name font-extrabold">{p.name}</h1>
+        <motion.h1
+          style={{ y: yName, opacity: fade }}
+          className="hero-name font-extrabold"
+        >
+          {p.name}
+        </motion.h1>
 
-        <div className="hero-role font-display font-bold text-gray-500">
+        <motion.div
+          style={{ y: yRole, opacity: fade }}
+          className="hero-role font-display font-bold text-gray-500"
+        >
           <AnimatePresence mode="wait">
             <motion.span
               key={i}
@@ -230,13 +326,19 @@ function Hero({ p }) {
               {roles[i]}
             </motion.span>
           </AnimatePresence>
-        </div>
+        </motion.div>
 
-        <p className="hero-tag text-sm text-gray-600 sm:text-base lg:text-lg">
+        <motion.p
+          style={{ y: yTag, opacity: fade }}
+          className="hero-tag text-sm text-gray-600 sm:text-base lg:text-lg"
+        >
           {p.tagline}
-        </p>
+        </motion.p>
 
-        <div className="hero-cta flex flex-wrap gap-3">
+        <motion.div
+          style={{ y: yCta, opacity: fade }}
+          className="hero-cta flex flex-wrap gap-3"
+        >
           <a
             className="btn gold"
             href="/journey"
@@ -254,30 +356,93 @@ function Hero({ p }) {
               Download CV
             </a>
           )}
-        </div>
+        </motion.div>
 
-        <div className="hero-photo">
-          <div className="relative">
+        <motion.div className="hero-photo" style={{ y: yPhoto }}>
+          {/* the whole group floats gently up and down */}
+          <motion.div
+            className="hero-photo-inner relative"
+            animate={{ y: [0, -12, 0] }}
+            transition={{ repeat: Infinity, duration: 5.5, ease: "easeInOut" }}
+          >
+            {/* spinning conic ring */}
             <motion.div
               className="absolute -inset-1.5 rounded-full bg-[conic-gradient(from_0deg,#f59e0b,#111111,#9ca3af,#f59e0b)] sm:-inset-3"
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
             />
-            <div className="relative aspect-square w-[clamp(6.5rem,27vw,20rem)] overflow-hidden rounded-full border-4 border-white bg-white shadow-2xl sm:border-[6px]">
+            {/* dashed orbit with two travelling dots */}
+            <motion.div
+              className="absolute -inset-3 rounded-full border border-dashed border-amber-500/60 sm:-inset-7"
+              animate={{ rotate: -360 }}
+              transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+            >
+              <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold shadow-[0_0_12px_#f59e0b]" />
+              <span className="absolute bottom-[14%] right-[4%] h-1.5 w-1.5 rounded-full bg-ink" />
+            </motion.div>
+
+            {/* the photo lives inside the circle: warm studio backdrop, white background of the photo melts into it (multiply) */}
+            <motion.div
+              style={{ x: discX, y: discY }}
+              className="relative aspect-square w-[var(--s)] overflow-hidden rounded-full border-4 border-white bg-[radial-gradient(circle_at_50%_30%,#fffdf8_0%,#fdecc2_55%,#f6c25e_100%)] shadow-[0_25px_60px_-15px_rgba(120,70,0,0.45)] sm:border-[6px]"
+            >
               {p.photo ? (
-                <img
-                  src={p.photo}
-                  alt={p.name}
-                  className="h-full w-full object-cover"
-                />
+                <>
+                  <motion.img
+                    src={p.photo}
+                    alt={p.name}
+                    className="absolute left-[11.5%] top-[6%] block w-[77%] max-w-none mix-blend-multiply"
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 9,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  {/* soft floor glow under the chair so the scene feels grounded */}
+                  <span className="pointer-events-none absolute bottom-[8%] left-[18%] h-[9%] w-[64%] rounded-[50%] bg-amber-700/25 blur-md" />
+                  {/* soft vignette + glass shine for a realistic, polished finish */}
+                  <span className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_45%,transparent_55%,rgba(90,50,0,0.22)_100%)]" />
+                  <motion.span
+                    className="pointer-events-none absolute -left-1/4 top-0 h-full w-1/4 -skew-x-12 bg-white/30 blur-md"
+                    animate={{ x: ["-40%", "520%"] }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 4.5,
+                      ease: "easeInOut",
+                      repeatDelay: 3,
+                    }}
+                  />
+                </>
               ) : (
-                <span className="grid h-full w-full place-items-center bg-ink font-display text-5xl font-extrabold text-gold">
+                <span className="grid h-full w-full place-items-center font-display text-5xl font-extrabold text-ink">
                   {(p.name || "?").charAt(0)}
                 </span>
               )}
-            </div>
-          </div>
-        </div>
+            </motion.div>
+
+            {/* floating decorations that move opposite to the mouse */}
+            <motion.span
+              style={{ x: dotX, y: dotY }}
+              className="absolute -left-3 top-[18%] h-3 w-3 rounded-full border-2 border-gold sm:-left-8 sm:h-5 sm:w-5"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+            />
+            <motion.span
+              style={{ x: dotX, y: dotY }}
+              className="absolute -right-2 top-[8%] h-2 w-2 rounded-full bg-ink sm:-right-7 sm:h-3 sm:w-3"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 3.6, ease: "easeInOut" }}
+            />
+            <motion.span
+              className="absolute -bottom-2 left-[8%] text-lg font-bold leading-none text-gold sm:-bottom-6 sm:text-3xl"
+              animate={{ rotate: [0, 90, 0], scale: [1, 1.25, 1] }}
+              transition={{ repeat: Infinity, duration: 5 }}
+            >
+              +
+            </motion.span>
+          </motion.div>
+        </motion.div>
       </div>
     </header>
   );

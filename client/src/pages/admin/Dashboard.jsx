@@ -18,8 +18,8 @@ const clean = (v, fields) => {
   return o;
 };
 
-// Resize an uploaded image to max 600px and return a JPEG data URL (saved in the profile's "photo" field)
-const shrink = (file, max = 600) => new Promise((res, rej) => {
+// Resize an uploaded image to max 1100px and return a JPEG data URL (saved in the profile's "photo" field)
+const shrink = (file, max = 1100) => new Promise((res, rej) => {
   const img = new Image();
   img.onload = () => {
     const s = Math.min(1, max / Math.max(img.width, img.height));

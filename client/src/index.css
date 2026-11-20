@@ -264,6 +264,9 @@
   font-size: clamp(0.8rem, 3.2vw, 1rem);
   letter-spacing: 0.04em;
 }
+.hero-photo-inner {
+  --s: clamp(6.5rem, 27vw, 20rem); /* circle size */
+}
 .hero-photo {
   grid-area: photo;
   grid-row: 1 / -1;
