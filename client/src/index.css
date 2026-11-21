@@ -475,7 +475,7 @@
   /* name ~9.8em wide: size = (width - gutters - photo - gap) / 10.2 keeps it on one line beside the photo */
   font-size: min(
     calc(
-      (100vw - 2.5rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) /
+      (100vw - 2rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) /
         10.2
     ),
     2rem
@@ -496,7 +496,7 @@
   /* phones: one line. ~56 characters ≈ 29em, so size = text column width / 29 */
   white-space: nowrap;
   font-size: calc(
-    (100vw - 2.5rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) / 29
+    (100vw - 2rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) / 29
   );
   line-height: 1.5;
   text-align: justify;
@@ -536,7 +536,7 @@
     margin-top: 0.7rem;
     font-size: min(
       calc(
-        (100vw - 4rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) /
+        (100vw - 2rem - clamp(6.5rem, 27vw, 20rem) - clamp(1rem, 4vw, 3rem)) /
           10.2
       ),
       3.6rem
@@ -790,3 +790,18 @@ textarea.autoarea { overflow: hidden; resize: none; min-height: 2.75rem; }
 .adm-curfile .btn { flex: none; }
 .adm.dark .adm-curfile { color: #a8a29e; }
 .adm.dark .adm-curfile a { color: #fcd34d; }
+
+/* Public site: the page scrolls in a box that starts below the 3rem top menu, so the scrollbar begins under the menu bar */
+html.site-lock,
+html.site-lock body { height: 100%; overflow: hidden; }
+.site-scroll {
+  position: fixed;
+  top: 3rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}

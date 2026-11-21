@@ -11,6 +11,12 @@ import {
 import { api } from "../api.js";
 import { useToast } from "../components/Toast.jsx";
 
+// The page scrolls inside one box that starts below the fixed top menu, so the scrollbar sits below the menu bar.
+// Scroll-based effects (progress bar, parallax, active menu) read this box instead of the window.
+const siteScroll = { current: null };
+// stable ref callback: an inline one would be reset on every render, before the scroll effects below read it
+const setSiteScroll = (el) => { siteScroll.current = el; };
+
 const card =
   "rounded-3xl border border-black/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)]";
 const darkCard = "rounded-3xl border border-white/10 bg-white/5";
@@ -37,6 +43,7 @@ const TONES = {
 function useParallax(speed = 60) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
+    container: siteScroll,
     target: ref,
     offset: ["start end", "end start"],
   });
@@ -75,7 +82,7 @@ function Section({ id, title, sub, tone = "light", children }) {
         speed={-80}
         className={`-left-28 bottom-10 h-48 w-48 blur-[90px] sm:h-80 sm:w-80 ${b2}`}
       />
-      <div className="relative mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
+      <div className="relative mx-auto max-w-6xl p-4 lg:p-8">
         <motion.h2
           ref={h.ref}
           style={{ y: h.y }}
@@ -98,7 +105,7 @@ function Section({ id, title, sub, tone = "light", children }) {
 }
 
 function Nav() {
-  const { scrollYProgress } = useScroll();
+  const { scrollYProgress } = useScroll({ container: siteScroll });
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
   const [open, setOpen] = useState(false);
   const goTo = useSectionNav();
@@ -122,11 +129,13 @@ function Nav() {
         const n = document.getElementById(el);
         if (n && n.getBoundingClientRect().top <= line) cur = key;
       }
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = "contact";
+      const box = siteScroll.current;
+      if (box && box.scrollTop + box.clientHeight >= box.scrollHeight - 4) cur = "contact";
       setActive(cur);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const box = siteScroll.current;
+    box?.addEventListener("scroll", onScroll, { passive: true });
+    return () => box?.removeEventListener("scroll", onScroll);
   }, []);
   const links = [
     ["home", "Home"],
@@ -217,8 +226,10 @@ function Nav() {
 // Sections live on one page; each has its own clean path (/home, /journey, /toolkit, /work, /contact).
 function scrollToSection(id) {
   const el = id === "home" ? null : document.getElementById(id === "projects" ? "work" : id);
-  const top = el ? el.getBoundingClientRect().top + window.scrollY - 48 : 0; // fixed nav is 48px tall
-  window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+  const box = siteScroll.current;
+  if (!box) return;
+  const top = el ? el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop : 0;
+  box.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
 }
 
 function useSectionNav() {
@@ -245,6 +256,7 @@ function Hero({ p }) {
   // scroll parallax: every layer of the hero drifts at its own speed while the hero scrolls away
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
+    container: siteScroll,
     target: ref,
     offset: ["start start", "end start"],
   });
@@ -296,7 +308,7 @@ function Hero({ p }) {
         aria-hidden
       />
       {/* Same design on every screen: text on the left, photo on the right. Areas are defined in index.css (.hero-grid). */}
-      <div className="hero-grid relative mx-auto max-w-6xl px-5 pb-10 pt-20 sm:px-8 sm:pb-14 sm:pt-24 lg:min-h-screen lg:pb-20">
+      <div className="hero-grid relative mx-auto max-w-6xl p-4 lg:min-h-[calc(100vh-3rem)] lg:p-8">
         <motion.p
           style={{ y: yHello, opacity: fade }}
           className="hero-hello font-semibold text-amber-600"
@@ -457,7 +469,7 @@ function About({ p }) {
   ].filter(([, v]) => v?.length);
   return (
     <section className="overflow-x-clip bg-stone-100">
-      <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-12 pt-2 sm:px-8 sm:pb-16 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12 lg:pb-20">
+      <div className="mx-auto grid max-w-6xl gap-6 p-4 lg:p-8 md:grid-cols-[1.5fr_1fr] md:items-start md:gap-12">
         <Reveal>
           <p className="border-l-4 border-gold pl-4 text-justify text-[0.95rem] leading-[1.8] text-gray-800 [hyphens:auto] [text-justify:inter-word] sm:pl-6 sm:text-lg lg:text-xl lg:leading-[1.85]">
             {p.summary}
@@ -479,6 +491,7 @@ function About({ p }) {
 function Journey({ items, intro }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
+    container: siteScroll,
     target: ref,
     offset: ["start 65%", "end 55%"],
   });
@@ -885,6 +898,15 @@ export default function Home() {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
   const { pathname } = useLocation();
+  const [ready, setReady] = useState(false); // sections render one step after the scroll box exists
+  useEffect(() => {
+    if (d) setReady(true);
+  }, [d]);
+  // the page scrolls inside .site-scroll (below the menu), so the window itself must not scroll
+  useEffect(() => {
+    document.documentElement.classList.add("site-lock");
+    return () => document.documentElement.classList.remove("site-lock");
+  }, []);
   // scroll to the section named by the path once the page content is on screen
   useEffect(() => {
     if (!d) return;
@@ -917,13 +939,19 @@ export default function Home() {
     );
   return (
     <>
-      <Nav />
-      <Hero p={d.profile} />
-      <About p={d.profile} />
-      <Journey items={d.milestones} intro={d.profile.journeyIntro} />
-      <Skills items={d.skills} />
-      <Projects items={d.projects} certs={d.certifications} />
-      <Contact p={d.profile} />
+      {ready && <Nav />}
+      <div id="site-scroll" className="site-scroll" ref={setSiteScroll}>
+        {ready && (
+          <>
+            <Hero p={d.profile} />
+            <About p={d.profile} />
+            <Journey items={d.milestones} intro={d.profile.journeyIntro} />
+            <Skills items={d.skills} />
+            <Projects items={d.projects} certs={d.certifications} />
+            <Contact p={d.profile} />
+          </>
+        )}
+      </div>
     </>
   );
 }
